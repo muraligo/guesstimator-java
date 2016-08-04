@@ -1,0 +1,151 @@
+Data Model
+
+Reference Data
+
+Complexity: Complex, Medium, Simple. Define multipliers for each.
+Phases: Analysis, Design, Build, Test. This is per component / unit.
+Architectural Layer: Infrastructure, Technical, Information, Application, Presentation.
+Application Type: Conceptual, SOA Suite, Web, Spring, Plain, Database, AnalyticsBigData, AnalyticsBI. Define multipliers for each.
+Language: Python, PHP, Java, Go, XML, HTML5, JS
+
+Component Type:
+Define base values for each by phase.
+
+DevEnv subsystem
+
+PhysicalSystemsDev package
+ComputeDev - Infra - acquisition and initialization
+StorageDev - Infra - acquisition and initialization
+ComputeBuild - Infra - acquisition and initialization
+StorageBuild - Infra - acquisition and initialization
+
+ToolsDev package
+SourceRepository - Infra - acquisition and configuration
+ArtifactRepository - Infra - acquisition and configuration
+ALMDev - Technical - acquisition and configuration
+BuildToolDev - Technical - installation and configuration (Ant, Maven, Make, etc)
+IDEDev - Technical - installation and configuration (Eclipse, JDeveloper, etc)
+
+AppFrameworkDev package - per application type - installation and configuration
+JEEServerDev - Technical, Web|SOASuite, Java
+SOASuiteDev - Technical, SOASuite, Java
+JSEDev - Technical, Plain, Java
+SpringDev - Technical, Spring|Web, Java
+PyDev - Technical, Plain, Python
+PHPDev - Technical, Web|Plain, PHP
+GoDev - Technical, Web|Plain, Go
+DataStoresSWDev - Technical - per application type - installation and configuration
+
+SecurityDev package - provisioning
+KeyStoreDev - Technical
+CertificateDev - Technical
+
+QAEnv subsystem
+
+PhysicalSystemsQA package
+ComputeQA
+StorageQA
+
+ToolsQA package - Technical - installation and configuration
+FunctionalTestingToolSuite
+BugTrackingTool
+ALMQA - only tools like Sonar or some such that show quality from automated tests
+
+DataQA - Information - acquisition and configuration (functional test data)
+
+AppFrameworkQA package - per application type - installation and configuration
+JEEServerQA - Technical, Web|SOASuite, Java
+SOASuiteQA - Technical, SOASuite, Java
+JSEQA - Technical, Plain, Java
+SpringQA - Technical, Spring|Web, Java
+PyQA - Technical, Plain, Python
+PHPQA - Technical, Web|Plain, PHP
+GoQA - Technical, Web|Plain, Go
+OHSQA - Technical, Web, XML
+DataStoresSWQA - Technical - per application type - installation and configuration
+
+SecurityQA package - provisioning
+KeyStoreDev - Technical
+CertificateDev - Technical
+AAA- Technical
+Connectivity - Technical - software driven network configuration
+
+Performance/Security Env subsystem
+
+like QA but with security set up at full strength like Prod and PhysicalSystemsPerf set up like Prod
+
+Could also have a Partner Integration Env for testing integrations with external partners
+
+ProductionEnv subsystem
+
+Schema package - Information - data model definition
+RDBMS_database
+RDBMS_schema
+RDBMS_table
+RDBMS_index
+RDBMS_relationships
+NoSQL_database
+NoSQL_schema
+NoSQL_table
+NoSQL_index
+
+DataObject - Application
+DataQuery - Application
+TransferObject - Application
+DataService - Application
+BusinessLogic - Application
+BusinessService - Application
+FrameworkService - Application
+PresentationWidget - Presentation
+PresentationScreen - Presentation
+PresentationFlow - Presentation
+PresentationLookAndFeel - Presentation
+
+
+Functional Data
+
+Following have: name, version, constituents, estimate
+Application: also has composition_factor, overhead per ADBT phase, application_type, initiation, construction, functional, performance, security, deployment
+Subsystem: also has composition_factor, overhead per ADBT phase, functional, performance, security
+Service: also has composition_factor, overhead per ADBT phase, functional, performance, security
+Package: also has composition_factor per ADBT phase
+Component: also has type, complexity, layer, language, count
+Initiation - a higher level phase providing initial analysis at - Application, Subsystem, Service levels
+Construction - a higher level phase including the ADBT phases for components
+Verification - a higher level phase including Integrated System Functional Test, Performance Test, and Security Test
+Deployment - a higher level phase where the application is rolled out to users
+
+Logic
+
+Component
+Take the base value per phase for type.
+Multiply by count.
+Multiply by the complexity.
+Store in phase estimates.
+Add for component estimate.
+
+Package
+Sum phase estimates of constituents.
+Multiply by composition_factor.
+Add for package estimate.
+
+Service
+Sum phase estimates of constituents.
+Multiply by composition_factor.
+Add overhead.
+Add for service estimate.
+
+Subsystem
+Sum phase estimates of constituents.
+Multiply by composition_factor.
+Add overhead.
+Add for subsystem estimate.
+
+Application
+Sum phase estimates of constituents.
+Multiply by composition_factor.
+Add overhead.
+Add and then multiply by application_type for construction estimate.
+Add separately qa, performance, security of constituents and multiply each by application_type for corresponding estimates.
+Add higher level phase estimates for application estimate.
+
