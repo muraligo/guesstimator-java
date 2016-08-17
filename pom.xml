@@ -6,17 +6,38 @@
   <packaging>war</packaging>
   <name>Guesstimator Java</name>
   <description>A Java based project estimator</description>
-  <build>
-    <plugins>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-war-plugin</artifactId>
-            <version>2.6</version>
-            <configuration>
-                <failOnMissingWebXml>false</failOnMissingWebXml>
-            </configuration>
-        </plugin>
-    </plugins>
-  </build>
+
+  <dependencies>
+  	<dependency>
+  		<groupId>org.eclipse.persistence</groupId>
+  		<artifactId>eclipselink</artifactId>
+  		<version>${version.eclipselink}</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.apache.commons</groupId>
+  		<artifactId>commons-lang3</artifactId>
+  		<version>${version.commons.lang}</version>
+  	</dependency>
+    <dependency>
+	    <groupId>com.fasterxml.jackson.core</groupId>
+	    <artifactId>jackson-databind</artifactId>
+	    <version>2.6.3</version>
+    </dependency>
+
+    <!-- Test related 
+    <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito.core</artifactId>
+        <version>1.10.8</version>
+        <scope>test</scope>
+    </dependency> -->
+  </dependencies>
+
+  <properties>
+  	<version.guice.general>4.0</version.guice.general>
+  	<version.restlet>2.3.3</version.restlet>
+  	<version.eclipselink>2.6.0</version.eclipselink>
+  	<version.commons.lang>3.4</version.commons.lang>
+  </properties>
   
 </project>
