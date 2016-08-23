@@ -129,7 +129,7 @@ class GuesstimatorInitializer {
 				"[ {\"phase\": \"Analysis\", \"value\": 5}, {\"phase\": \"Design\", \"value\": 10}, "
 						+ " {\"phase\": \"Build\", \"value\": 30}, {\"phase\": \"Test\", \"value\": 15} ]");
 		em.persist(ctype);
-		ctype = createComponentType("QA.Tools.FunctionalTestingToolSuite", "installation and configuration", 
+		ctype = createComponentType("QA.Tools.FunctionalTestTools", "installation and configuration", 
 				ComponentContext.DevOps, Layer.Technical, 
 				"[ {\"phase\": \"Analysis\", \"value\": 5}, {\"phase\": \"Design\", \"value\": 10}, "
 						+ " {\"phase\": \"Build\", \"value\": 5}, {\"phase\": \"Test\", \"value\": 5} ]");
@@ -227,12 +227,12 @@ class GuesstimatorInitializer {
 				"[ {\"phase\": \"Analysis\", \"value\": 5}, {\"phase\": \"Design\", \"value\": 20}, "
 						+ " {\"phase\": \"Build\", \"value\": 35}, {\"phase\": \"Test\", \"value\": 20} ]");
 		em.persist(ctype);
-		ctype = createComponentType("Perf.Tools.PerformanceTestingToolSuite", "installation and configuration", 
+		ctype = createComponentType("Perf.Tools.PerformanceTestTools", "installation and configuration", 
 				ComponentContext.DevOps, Layer.Technical, 
 				"[ {\"phase\": \"Analysis\", \"value\": 5}, {\"phase\": \"Design\", \"value\": 10}, "
 						+ " {\"phase\": \"Build\", \"value\": 5}, {\"phase\": \"Test\", \"value\": 5} ]");
 		em.persist(ctype);
-		ctype = createComponentType("Perf.Tools.SecurityTestingToolSuite", "installation and configuration", 
+		ctype = createComponentType("Perf.Tools.SecurityTestTools", "installation and configuration", 
 				ComponentContext.DevOps, Layer.Technical, 
 				"[ {\"phase\": \"Analysis\", \"value\": 5}, {\"phase\": \"Design\", \"value\": 10}, "
 						+ " {\"phase\": \"Build\", \"value\": 5}, {\"phase\": \"Test\", \"value\": 5} ]");
@@ -412,7 +412,7 @@ class GuesstimatorInitializer {
 				"[ {\"phase\": \"Analysis\", \"value\": 1}, {\"phase\": \"Design\", \"value\": 3}, "
 						+ " {\"phase\": \"Build\", \"value\": 4}, {\"phase\": \"Test\", \"value\": 2} ]");
 		em.persist(ctype);
-		ctype = createComponentType("General.Schema.RDBMS_relationships", "data model definition", 
+		ctype = createComponentType("General.Schema.RDBMS_relations", "data model definition", 
 				ComponentContext.DevOps, Layer.Information, 
 				"[ {\"phase\": \"Analysis\", \"value\": 2}, {\"phase\": \"Design\", \"value\": 3}, "
 						+ " {\"phase\": \"Build\", \"value\": 2}, {\"phase\": \"Test\", \"value\": 3} ]");
@@ -489,7 +489,7 @@ class GuesstimatorInitializer {
 				"[ {\"phase\": \"Analysis\", \"value\": 4}, {\"phase\": \"Design\", \"value\": 7}, "
 						+ " {\"phase\": \"Build\", \"value\": 4}, {\"phase\": \"Test\", \"value\": 5} ]");
 		em.persist(ctype);
-		ctype = createComponentType("General.Code.PresentationLookAndFeel", "code", 
+		ctype = createComponentType("General.Code.PresentationLnF", "code", 
 				ComponentContext.DevOps, Layer.Presentation, 
 				"[ {\"phase\": \"Analysis\", \"value\": 5}, {\"phase\": \"Design\", \"value\": 10}, "
 						+ " {\"phase\": \"Build\", \"value\": 5}, {\"phase\": \"Test\", \"value\": 10} ]");

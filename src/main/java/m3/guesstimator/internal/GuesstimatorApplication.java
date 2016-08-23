@@ -1,12 +1,27 @@
 package m3.guesstimator.internal;
 
-public class GuesstimatorApplication {
+import org.restlet.Application;
+import org.restlet.Restlet;
+import org.restlet.routing.Router;
 
-	public static void main(String[] args) {
-		GuesstimatorContext ctx = new GuesstimatorContext();
+public class GuesstimatorApplication extends Application {
+	GuesstimatorContext ctx;
+	GuesstimatorInitializer initializer;
+
+	public GuesstimatorApplication() {
+		super();
+		ctx = new GuesstimatorContext();
 		ctx.initialize();
-		GuesstimatorInitializer initializer = new GuesstimatorInitializer();
+		initializer = new GuesstimatorInitializer();
 		initializer.ctx = ctx;
-		initializer.initializeComponentType();
+//		initializer.initializeComponentType();
 	}
+
+	@Override
+    public Restlet createInboundRoot() {
+    	Router router = new Router(getContext());
+    	router.attach("/componenttypes", ComponentTypeCollectionServerResource.class);
+        router.attach("/service/{id}", ServiceServerResource.class);
+        return router;
+    }
 }

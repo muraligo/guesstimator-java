@@ -20,6 +20,16 @@ class GuesstimatorContext implements ApplicationContext {
 		return em;
 	}
 
+	public void releaseEntityManager() {
+		if (em != null) {
+			if (em.getTransaction() != null && em.getTransaction().isActive()) {
+				em.flush();
+			}
+			em.clear();
+			em.close();
+		}
+	}
+
 	void initialize() {
 		factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
 	}
