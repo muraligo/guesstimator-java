@@ -12,6 +12,12 @@ public class M3ModelException extends RuntimeException {
 		this.jsonField = fld;
 	}
 
+    public M3ModelException(String model, String fld, String s, String action) {
+        super("Exception " + action + " DB string value [" + s + "]");
+        this.model = model;
+        this.jsonField = fld;
+    }
+
 	public String getModel() {
 		return model;
 	}
