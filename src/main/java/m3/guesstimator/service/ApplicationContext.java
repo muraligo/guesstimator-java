@@ -1,7 +1,8 @@
 package m3.guesstimator.service;
 
-import javax.persistence.EntityManager;
+import java.util.Map;
 
 public interface ApplicationContext {
-	EntityManager getEntityManager();
+    String getAppHome();
+    Map<String, String> getWeb();
 }

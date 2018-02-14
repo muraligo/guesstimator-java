@@ -1,24 +1,13 @@
 package m3.guesstimator.model.functional;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-
 import m3.guesstimator.model.ContainingSolutionArtifact;
+import m3.guesstimator.model.SolutionArtifact;
 import m3.guesstimator.model.reference.Complexity;
 import m3.guesstimator.model.reference.ComponentType;
 import m3.guesstimator.model.reference.ConstructionPhase;
 import m3.guesstimator.model.reference.Language;
 import m3.guesstimator.model.reference.Layer;
 
-@Entity
-@Table(name = "COMPONENT")
 public class Component extends AbstractSolutionArtifact {
     private static final long serialVersionUID = 1L;
 
@@ -32,8 +21,6 @@ public class Component extends AbstractSolutionArtifact {
 	private Long[] constructionEstimates;
 	private boolean constructEstimateComputed = false;
 
-    @ManyToOne(optional=false, targetEntity=m3.guesstimator.model.functional.Package.class)
-    @JoinColumn(name="PARENT", nullable=false)
     public ContainingSolutionArtifact getParent() {
         return parent;
 	}
@@ -41,8 +28,6 @@ public class Component extends AbstractSolutionArtifact {
         this.parent = parent;
     }
 
-    @ManyToOne(optional=false)
-    @JoinColumn(name="COMPONENT_TYPE", nullable=false)
     public ComponentType getType() {
         return type;
     }
@@ -51,8 +36,6 @@ public class Component extends AbstractSolutionArtifact {
         constructEstimateComputed = false;
     }
 
-    @Column(name = "COMPLEXITY", nullable = false)
-    @Enumerated(EnumType.STRING)
     public Complexity getComplexity() {
         return complexity;
     }
@@ -61,8 +44,6 @@ public class Component extends AbstractSolutionArtifact {
         constructEstimateComputed = false;
     }
 
-    @Column(name = "LAYER", nullable = false)
-    @Enumerated(EnumType.STRING)
     public Layer getLayer() {
         return layer;
     }
@@ -70,8 +51,6 @@ public class Component extends AbstractSolutionArtifact {
         layer = value;
     }
 
-    @Column(name = "LANGUAGE", nullable = false)
-    @Enumerated(EnumType.STRING)
     public Language getLanguage() {
         return language;
     }
@@ -79,7 +58,6 @@ public class Component extends AbstractSolutionArtifact {
         language = value;
     }
 
-    @Column(name = "COUNT", nullable = false)
     public Long getCount() {
         return count;
     }
@@ -88,7 +66,6 @@ public class Component extends AbstractSolutionArtifact {
         constructEstimateComputed = false;
     }
 
-    @Transient
     @Override
     public Long getConstructPhaseEstimate(ConstructionPhase phase) {
         if (! constructEstimateComputed) {
@@ -102,7 +79,6 @@ public class Component extends AbstractSolutionArtifact {
      * Only provides construction estimate as a computed value 
      * as there are only construction estimates at this level.
      */
-    @Transient
     @Override
     public Long getEstimate() {
         Long estimate = 0L;
@@ -122,4 +98,30 @@ public class Component extends AbstractSolutionArtifact {
             constructionEstimates[p.ordinal()] = estimate;
         }
     }
+
+/*
+    @Override
+    protected String getOtherFieldValue(String fldName) {
+        String value = null;
+        if ("complexity".equals(fldName))
+            value = "'" + getComplexity().name() + "'";
+        else if ("layer".equals(fldName))
+            value = "'" + getLayer().name() + "'";
+        else if ("language".equals(fldName))
+            value = "'" + getLanguage().name() + "'";
+        else if ("count".equals(fldName))
+            value = getCount().toString();
+        else if ("type".equals(fldName))
+            value = getType().getName(); // name is the id which is the foreign key
+        else if ("parent".equals(fldName))
+            value = getParent().getName(); // name is the id which is the foreign key
+        return value;
+    }
+*/
+	@Override
+	public SolutionArtifact createNew() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

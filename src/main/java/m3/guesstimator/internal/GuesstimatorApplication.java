@@ -1,27 +1,56 @@
 package m3.guesstimator.internal;
 
-import org.restlet.Application;
-import org.restlet.Restlet;
-import org.restlet.routing.Router;
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class GuesstimatorApplication extends Application {
-	GuesstimatorContext ctx;
-	GuesstimatorInitializer initializer;
+import com.google.gson.Gson;
 
-	public GuesstimatorApplication() {
-		super();
-		ctx = new GuesstimatorContext();
-		ctx.initialize();
-		initializer = new GuesstimatorInitializer();
-		initializer.ctx = ctx;
-//		initializer.initializeComponentType();
+import static spark.Spark.get;
+import static spark.Spark.post;
+
+import m3.guesstimator.internal.data.AbstractDao;
+import m3.guesstimator.internal.data.EstimatorComponentDao;
+import m3.guesstimator.internal.data.EstimatorComponentTypeDao;
+import m3.guesstimator.internal.data.EstimatorResponse;
+import m3.guesstimator.model.functional.Component;
+import m3.guesstimator.model.reference.ComponentType;
+import m3.guesstimator.service.ApplicationContext;
+import spark.Route;
+
+public class GuesstimatorApplication {
+    GuesstimatorContext ctx;
+    GuesstimatorInitializer initializer;
+    static final Map<String, Class<?>> _resourceMap = Collections.synchronizedMap(
+            new ConcurrentHashMap<String, Class<?>>(40));
+    static final Map<String, AbstractDao> _daoMap = Collections.synchronizedMap(
+            new ConcurrentHashMap<String, AbstractDao>(40));
+    static final Map<String, Map<String, Map<String, ComponentType>>> _componentTypeCache = Collections.synchronizedMap(
+            new ConcurrentHashMap<String, Map<String, Map<String, ComponentType>>>(20));
+
+    public GuesstimatorApplication(ApplicationContext ctx) {
+        super();
+        this.ctx = (GuesstimatorContext)ctx;
+        initializer = new GuesstimatorInitializer(this);
+        initializer.initializeDao();
+        initializer.initializeComponentType((EstimatorComponentTypeDao) _daoMap.get("component_type"));
+
+        // ******** verbs for component resource **********
+        post("/new/component", (req, res) -> {
+            Gson gson = new Gson();
+            Component ent = gson.fromJson(req.body(), Component.class);
+            EstimatorComponentDao dao = (EstimatorComponentDao) _daoMap.get("component");
+            // ComponentResource resource = new ComponentResource();
+            AbstractServerResource resource = null;
+            resource.dao = dao;
+            EstimatorResponse resp = resource.put(ent);
+            // Handle errors
+            // TODO ideally following should not be here and the resp is returned
+            // and the Transformers convert them
+            res.status(resp.status());
+            res.type("text/plain"); // actually pull from res
+            return "inserted"; // actually return a new value or something like that
+        });
 	}
 
-	@Override
-    public Restlet createInboundRoot() {
-    	Router router = new Router(getContext());
-    	router.attach("/componenttypes", ComponentTypeCollectionServerResource.class);
-        router.attach("/service/{id}", ServiceServerResource.class);
-        return router;
-    }
 }

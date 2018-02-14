@@ -1,12 +1,12 @@
 package m3.guesstimator.model;
 
-import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.List;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
 
 import m3.guesstimator.model.reference.ConstructionPhase;
 
@@ -24,16 +24,14 @@ public interface Model {
 	Long getEstimate();
 
 	default void parseConstructPhaseValues(String fld, String s, Long[] arry) {
-		ObjectMapper mapper = new ObjectMapper();
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        Type collectionType = new TypeToken<List<PhaseValue>>(){}.getType();
 		List<PhaseValue> l = null;
 		try {
-			l = mapper.readValue(s, new TypeReference<List<PhaseValue>>(){});
-		} catch (JsonMappingException|JsonParseException e) {
+            l = gson.fromJson(s, collectionType);
+		} catch (JsonSyntaxException e) {
 			l = null;
 			throw new M3ModelException(getClass().getSimpleName(), fld, s, "parsing Json from", e);
-		} catch (IOException ioe) {
-			l = null;
-			throw new M3ModelException(getClass().getSimpleName(), fld, s, "reading Json from", ioe);
 		}
 		try {
 			l.forEach(pv -> arry[pv.getPhaseEnum().ordinal()] = pv.getValue());

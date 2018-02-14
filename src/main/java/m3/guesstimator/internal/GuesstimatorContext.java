@@ -1,36 +1,53 @@
 package m3.guesstimator.internal;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 
 import m3.guesstimator.service.ApplicationContext;
 
-class GuesstimatorContext implements ApplicationContext {
-	private static final String PERSISTENCE_UNIT_NAME = "guesstimator-java";
-	private static EntityManagerFactory factory;
+public class GuesstimatorContext implements ApplicationContext {
+	private static Logger logger = LoggerFactory.getLogger(ApplicationContext.class);
 
-	private EntityManager em;
+    private Map<String, String> web;
+    private Map<String, String> gitbase;
+    private String appHome = "";
 
-	@Override
-	public EntityManager getEntityManager() {
-		if (em == null) {
-			em = factory.createEntityManager();
-		}
-		return em;
-	}
+    @Override
+    public Map<String, String> getWeb() {
+        return web;
+    }
+    public void setWeb(Map<String, String> web) {
+        this.web = web;
+    }
 
-	public void releaseEntityManager() {
-		if (em != null) {
-			if (em.getTransaction() != null && em.getTransaction().isActive()) {
-				em.flush();
-			}
-			em.clear();
-			em.close();
-		}
-	}
-
-	void initialize() {
-		factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
-	}
+    @Override
+    public String getAppHome() {
+        return appHome;
+    }
+    public void setAppHome(String appHome) {
+        this.appHome = appHome;
+    }
+ 
+    @Override
+    public String toString() {
+        return "Configuration [web=" + web + ", gitbase=" + gitbase + "]";
+    }
+ 
+    public static ApplicationContext loadConfig(String path, String appHome) throws IOException {
+        Yaml yaml = new Yaml();
+        GuesstimatorContext config = null;
+        try (InputStream in = Files.newInputStream(Paths.get(path))) {
+            config = yaml.loadAs(in, GuesstimatorContext.class);
+            config.setAppHome(appHome);
+            logger.info(config.toString());
+        }
+        return config;
+    }
 }

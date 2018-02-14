@@ -10,6 +10,6 @@ package m3.guesstimator.model.reference;
 public enum ConstructionPhase {
 	Analysis, 
 	Design, 
-	Build, 
-	Test
+	Develop, 
+	Verify
 }

@@ -1,7 +1,7 @@
 package m3.guesstimator.model;
 
-import java.io.IOException;
 import java.lang.reflect.Array;
+import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -12,10 +12,10 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
 
 /**
  * 
@@ -37,11 +37,15 @@ public class ParseablePrimaryCollection<E extends Enum<E>, T> {
     protected final T _initialValue;
     protected final int _size;
     protected final E[] _names;
+    protected final Gson _gson;
+
+	public ParseablePrimaryCollection(String modelName, String fld, Class<E> clsNm, Class<T> clsVal, T initValue) {
+        this(modelName, fld, clsNm, clsVal, initValue, LocalDateTime.now());
+    }
 
     @SuppressWarnings("unchecked")
-	public ParseablePrimaryCollection(String modelName, String fld, Class<E> clsNm, Class<T> clsVal, T initValue) {
+	public ParseablePrimaryCollection(String modelName, String fld, Class<E> clsNm, Class<T> clsVal, T initValue, LocalDateTime currTime) {
         super();
-        LocalDateTime currTime = LocalDateTime.now();
         parsedAt = currTime;
         updatedAt = currTime;
         this.modelName = modelName;
@@ -53,6 +57,7 @@ public class ParseablePrimaryCollection<E extends Enum<E>, T> {
         _size = _names.length;
         _collection = (T[]) Array.newInstance(_valueClass, _size);
         Arrays.fill(_collection, _initialValue);
+        _gson = new GsonBuilder().setPrettyPrinting().create();
     }
 
     public String getStrCollection() {
@@ -74,11 +79,12 @@ public class ParseablePrimaryCollection<E extends Enum<E>, T> {
         if (index < 0 || index >= _size || index >= _collection.length) {
             throw new M3ModelException(modelName, fieldName, String.valueOf(index), "index in");
         }
+        updateCollection();
         return _collection[index];
     }
     public T get(E name) {
-    	int ix = name.ordinal();
-        return _collection[ix];
+        Objects.requireNonNull(name);
+        return _collection[name.ordinal()];
     }
 
     /**
@@ -209,9 +215,9 @@ public class ParseablePrimaryCollection<E extends Enum<E>, T> {
         }
     }
 
-    public class NameValue<V> {
+    public class NameValue {
         private String _name;
-        private V _value;
+        private String _value;
 
         public String getName() {
             return _name;
@@ -220,33 +226,38 @@ public class ParseablePrimaryCollection<E extends Enum<E>, T> {
             _name = nm;
         }
 
-        public V getValue() {
+        public Object getValue() {
             return _value;
         }
-        public void setValue(V val) {
+        public void setValue(String val) {
             _value = val;
         }
     }
 
     private void parseNameValues() {
-	    ObjectMapper mapper = new ObjectMapper();
-	    List<List<NameValue<T>>> l = null;
+        Type collectionType = new TypeToken<List<List<NameValue>>>(){}.getType();
+	    List<List<NameValue>> l = null;
 	    try {
-	        l = mapper.readValue(strCollection, new TypeReference<List<NameValue<T>>>(){});
-	    } catch (JsonMappingException|JsonParseException e) {
+	        l = _gson.fromJson(strCollection, collectionType);
+	    } catch (JsonSyntaxException e) {
 	        l = null;
 	        throw new M3ModelException(modelName, fieldName, strCollection, "parsing Json from", e);
-	    } catch (IOException ioe) {
-	        l = null;
-	        throw new M3ModelException(modelName, fieldName, strCollection, "reading Json from", ioe);
 		}
 	    l.forEach(nv -> {
 	    	@SuppressWarnings("unchecked")
-			NameValue<T> nvt = (NameValue<T>)nv;
+			NameValue nvt = (NameValue)nv;
 	        int ix = nameCheck(nvt.getName());
 	        // Assume valid index; exception already thrown if not found
-	        _collection[ix] = nvt.getValue();
+	        _collection[ix] = checkAndGetValue(nvt.getValue());
 	    });
+    }
+
+    @SuppressWarnings("unchecked")
+	private T checkAndGetValue(Object val) {
+        if (_valueClass.isAssignableFrom(val.getClass())) {
+            return (T)val;
+        }
+        throw new IllegalArgumentException("Value [" + val + "] is not of type [" + _valueClass.getSimpleName() + "]");
     }
 
     /**
@@ -267,6 +278,22 @@ public class ParseablePrimaryCollection<E extends Enum<E>, T> {
                 return enumForName.ordinal();
         }
         throw new M3ModelException(modelName, fieldName, nm, "matching name in");
+    }
+
+    public boolean isParsedBefore(LocalDateTime currTime) {
+	    return parsedAt.isBefore(currTime);
+    }
+
+    public boolean isParsedAfter(LocalDateTime currTime) {
+	    return parsedAt.isAfter(currTime);
+    }
+
+    public boolean isUpdatedBefore(LocalDateTime currTime) {
+	    return updatedAt.isBefore(currTime);
+    }
+
+    public boolean isUpdatedAfter(LocalDateTime currTime) {
+	    return updatedAt.isAfter(currTime);
     }
 
 }

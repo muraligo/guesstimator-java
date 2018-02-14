@@ -1,50 +1,33 @@
 package m3.guesstimator.model.reference;
 
-import java.io.IOException;
+import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.Transient;
+import m3.guesstimator.model.ParseablePrimaryCollection;
+import m3.guesstimator.model.SolutionArtifact;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+public class ComponentType implements Serializable, Comparable<ComponentType>, Cloneable {
+    private static final long serialVersionUID = 1L;
 
-import m3.guesstimator.model.M3JsonException;
-import m3.guesstimator.model.M3ModelException;
-import m3.guesstimator.model.Model.PhaseValue;
-
-@Entity
-@Table(name = "component_type")
-public class ComponentType {
 	private String name;
 	private String description;
+	private String version;
 	private ComponentContext context;
 	private Layer architecturalLayer;
 	private String strConstructCosts;
 	// fields below are non-persistent
-	private Long[] costs;
-	LocalDateTime constructCostParsedAt;
-	LocalDateTime constructCostUpdatedAt;
+    transient ParseablePrimaryCollection<ConstructionPhase, Long> constructCosts;
 
-	public ComponentType() {
-		costs = new Long[ConstructionPhase.values().length];
-		Arrays.fill(costs, 0L);
-		LocalDateTime currTime = LocalDateTime.now();
-		constructCostParsedAt = null;
-		constructCostUpdatedAt = currTime;
+    public ComponentType() {
+        constructCosts = new ParseablePrimaryCollection<ConstructionPhase, Long>(getClass().getSimpleName(), 
+                "ConstructCosts", ConstructionPhase.class, Long.class, 0L);
 	}
 
-    @Id
-	@Column(name = "name", nullable = false, length = 32)
+    ComponentType(LocalDateTime currTime) {
+        constructCosts = new ParseablePrimaryCollection<ConstructionPhase, Long>(getClass().getSimpleName(), 
+                "ConstructCosts", ConstructionPhase.class, Long.class, 0L, currTime);
+	}
+
 	public String getName() {
 		return name;
 	}
@@ -52,7 +35,6 @@ public class ComponentType {
 		name = value;
 	}
 
-	@Column(name = "description", length = 1024)
 	public String getDescription() {
 		return description;
 	}
@@ -60,17 +42,21 @@ public class ComponentType {
 		description = value;
 	}
 
-	@Column(name = "costs", nullable = false)
-	public String getStrConstructCosts() {
-		return strConstructCosts;
-	}
-	public void setStrConstructCosts(String value) {
-		strConstructCosts = value;
-		constructCostUpdatedAt = LocalDateTime.now();
-	}
+    public String getVersion() {
+        return version;
+    }
+    public void setVersion(String value) {
+        version = value;
+    }
 
-    @Column(name = "context")
-    @Enumerated(EnumType.STRING)
+    public String getStrConstructCosts() {
+        return strConstructCosts;
+    }
+    public void setStrConstructCosts(String value) {
+        strConstructCosts = value;
+        constructCosts.setStrCollection(value);
+    }
+
 	public ComponentContext getContext() {
 		return context;
 	}
@@ -78,8 +64,6 @@ public class ComponentType {
 		this.context = context;
 	}
 
-    @Column(name = "layer")
-    @Enumerated(EnumType.STRING)
 	public Layer getArchitecturalLayer() {
 		return architecturalLayer;
 	}
@@ -87,36 +71,32 @@ public class ComponentType {
 		this.architecturalLayer = architecturalLayer;
 	}
 
-	@Transient
 	public Long getConstructCost(ConstructionPhase phase) {
-		if (constructCostParsedAt == null || constructCostUpdatedAt.isAfter(constructCostParsedAt)) {
-			try {
-				parseConstructCosts("ConstructCosts", strConstructCosts, costs);
-				constructCostParsedAt = LocalDateTime.now();
-			} catch (M3JsonException|M3ModelException e) {
-				e.printStackTrace();
-				throw e;
-			}
-		}
-		return costs[phase.ordinal()];
+		return constructCosts.get(phase.ordinal());
 	}
 
-	private void parseConstructCosts(String fld, String s, Long[] arry) {
-		ObjectMapper mapper = new ObjectMapper();
-		List<PhaseValue> l = null;
-		try {
-			l = mapper.readValue(s, new TypeReference<List<PhaseValue>>(){});
-		} catch (JsonMappingException|JsonParseException e) {
-			l = null;
-			throw new M3ModelException(getClass().getSimpleName(), fld, s, "parsing Json from", e);
-		} catch (IOException ioe) {
-			l = null;
-			throw new M3ModelException(getClass().getSimpleName(), fld, s, "reading Json from", ioe);
-		}
-		try {
-			l.forEach(pv -> arry[pv.getPhaseEnum().ordinal()] = pv.getValue());
-		} catch (IllegalArgumentException iae) {
-			throw new M3ModelException(getClass().getSimpleName(), fld, s, "matching enum with phase in", iae);
-		}
-	}
+    @Override
+    public String toString() {
+        StringBuffer sb = new StringBuffer("ComponentType#" + name + "{");
+        sb.append(context);
+        sb.append(".");
+        sb.append(architecturalLayer);
+        sb.append(", ");
+        sb.append(strConstructCosts);
+        sb.append("}");
+        return sb.toString();
+    }
+
+    @Override
+    public int compareTo(ComponentType o) {
+        return getName().compareTo(o.getName());
+    }
+
+    boolean isConstructParseTimeSameAs(LocalDateTime currTime) {
+        return (!constructCosts.isParsedAfter(currTime) && !constructCosts.isParsedBefore(currTime));
+    }
+
+    boolean isConstructUpdateTimeSameAs(LocalDateTime currTime) {
+        return (!constructCosts.isUpdatedAfter(currTime) && !constructCosts.isUpdatedBefore(currTime));
+    }
 }
