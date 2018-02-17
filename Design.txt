@@ -104,16 +104,29 @@ PresentationLookAndFeel - Presentation
 
 Functional Data
 
-Following have: name, version, constituents, estimate
-Application: also has composition_factor, overhead per ADBT phase, application_type, initiation, construction, functional, performance, security, deployment
-Subsystem: also has composition_factor, overhead per ADBT phase, functional, performance, security
-Service: also has composition_factor, overhead per ADBT phase, functional, performance, security
-Package: also has composition_factor per ADBT phase
-Component: also has type, complexity, layer, language, count
-Initiation - a higher level phase providing initial analysis at - Application, Subsystem, Service levels
-Construction - a higher level phase including the ADBT phases for components
+NFR build categories:
+Security - provides for security aspects in higher level artifacts
+Maintainability - provides for aspects (e.g. telemetry, error handling, lifecycle management, ...)  in higher level artifacts
+
+Higher level phases:
+Initiation - providing initial analysis at - Application, Subsystem, Service levels
+Construction - factors in composition and overheads to the ADBT phases for components, adds higher level NFR builds
 Verification - a higher level phase including Integrated System Functional Test, Performance Test, and Security Test
 Deployment - a higher level phase where the application is rolled out to users
+
+Following have: name, description, version, estimate -- abstracted into BasicSolutionArtifact
+Component: also has type, complexity, layer, language, count
+Interaction: also has fromS, toS, message, api. S = Subsystem or Service
+Integration: also has fromApplication, toApplication, message, endPoint
+Message: also has type (ACTION, INFO, ERROR, DATA), encoding (POJO, XML, JSON), dataType (factor is depth), subType (each has factor), data
+
+Following additionally have: constituents, composition_factor per ADBT phase, nfr_build per NFR category, verification per Test category
+	abstracted into ContainingSolutionArtifact
+Package: no additional factors 
+Service: also has overhead per ADBT phase. Constituted only of packages
+Subsystem: also has overhead per ADBT phase. Constituted only of packages
+Application: also has overhead per ADBT phase, application_type, initiation, deployment.
+	Constituted of subsystems, services, and interactions between them
 
 Logic
 
@@ -149,3 +162,40 @@ Add and then multiply by application_type for construction estimate.
 Add separately qa, performance, security of constituents and multiply each by application_type for corresponding estimates.
 Add higher level phase estimates for application estimate.
 
+DAO - 1 per each type
+AbstractDAO
+	link to a pooled data source
+	maintains a cache of entity states
+	ensureObjectOfType(o): whether object is of the type the DAO expects -- abstract
+	getTypeOfObject(o): abstract
+	getNameOfObject(o): abstract
+	getState: calls above 3 and gets state based on name. if it exists, it sets it to UPDATE, else NEW and add to cache
+	lockForUpdate: calls above 3. if state does not exist in cache add and set to NONE. lock for mod
+	Inner Classes: (CriteriaBuilder, LogicCriteria, BasicCriteria), FieldState, EntityState (by class and name + op {NEW, UPDATE, DELETE, NONE})
+
+--------------------------------------------------------------------
+Basic Info
+Entity Annotation	Relationship	columnName	fieldClass		fieldRefersTo
+Column				Basic			cann.name()	<primitive>		NA
+Column				Enumerated		cann.name()	Enum<?>			EnumType
+ManyToOne			JoinColumn		cann.name()	Class<?>		IdForType
+OneToMany			NA				NA			List<Class<?>>	ForeignTable
+
+Reference Info
+Entity Annotation	Relationship	targetClass			targetField		targetTableName
+Column				Basic			NA					NA				NA
+Column				Enumerated		NA					NA				NA
+ManyToOne			JoinColumn		mann.targetEntity()	NA				targetClass.getAnnotation(
+																		  javax.persistence.Table.class
+																		  ).name()
+OneToMany			NA				mann.targetEntity()	mann.mappedBy()	targetClass.getAnnotation(
+																		  javax.persistence.Table.class
+																		  ).name()
+
+How to Process
+Field Kind			Insert					Update					Select
+BasicColumn			own table as is			own table as is			own table as is
+EnumeratedColumn	own table with name()	own table with name()	own table valueOf()
+ManyToOneJoinColumn	own table with getName() own table with getName() load object from target table matching key = getName()
+OneToManyMappedBy	other table with 		other table with 		load objects from target table matching FK = this.name
+					self.getName() as FK	self.getName() as FK

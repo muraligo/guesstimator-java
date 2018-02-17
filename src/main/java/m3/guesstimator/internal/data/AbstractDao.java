@@ -25,6 +25,7 @@ import m3.guesstimator.model.M3ModelFieldsException.M3FieldException;
 import m3.guesstimator.model.functional.AbstractSolutionArtifact;
 import m3.guesstimator.model.SolutionArtifact;
 import m3.guesstimator.model.reference.BasicCriterionOperator;
+import m3.guesstimator.model.reference.Layer;
 import m3.guesstimator.model.reference.LogicCriterionOperator;
 
 public abstract class AbstractDao {
@@ -34,9 +35,6 @@ public abstract class AbstractDao {
     protected static final String _PARENT_COLUMN = "PARENT";
     protected static final Map<String, FieldMappingSpec> _fieldsMap = Collections.synchronizedMap(
             new ConcurrentHashMap<String, FieldMappingSpec>(40));
-    // TODO Figure out if we can drop this
-    protected static final Map<String, AbstractArtifactHelper> _helpers = Collections.synchronizedMap(
-            new ConcurrentHashMap<String, AbstractArtifactHelper>(20));
     protected static final Map<String, EntityState> _entities = Collections.synchronizedMap(
             new ConcurrentHashMap<String, EntityState>(2000));
     protected static ComboPooledDataSource cpds = null;
@@ -142,6 +140,85 @@ public abstract class AbstractDao {
         return state;
     }
 
+    protected M3DaoFieldState retrieveStringValue(ResultSet rs, String fldNm, String colNm, M3ModelFieldsException mfex) {
+        M3DaoFieldState state = new M3DaoFieldState();
+        state.fieldName = fldNm;
+        state.same = false;
+        try {
+            String val = rs.getString(colNm);
+            if (rs.wasNull()) {
+                // TODO Handle the fact that value was not retrieved
+            } else { // Not null
+                state.newValue = val;
+            }
+        } catch (SQLException sqle) {
+            M3FieldException ex = mfex.addException(state.fieldName, "retrieving value from DB on query", null, sqle);
+            state.exception = ex;
+        }
+        return state;
+    }
+
+    protected M3DaoFieldState retrieveLongValue(ResultSet rs, String fldNm, String colNm, M3ModelFieldsException mfex) {
+        M3DaoFieldState state = new M3DaoFieldState();
+        state.fieldName = fldNm;
+        state.same = false;
+        try {
+            String val = rs.getString(colNm);
+            if (rs.wasNull()) {
+                // TODO Handle the fact that value was not retrieved
+            } else { // Not null
+                Long lval = Long.valueOf(val);
+                state.newValue = lval;
+            }
+        } catch (SQLException sqle) {
+            M3FieldException ex = mfex.addException(state.fieldName, "retrieving value from DB on query", null, sqle);
+            state.exception = ex;
+        } catch (NumberFormatException nfe) {
+            M3FieldException ex = mfex.addException(state.fieldName, "converting value from DB, invalid value", null, nfe);
+            state.exception = ex;
+        }
+        return state;
+    }
+
+    static void retrieveLayer(M3DaoFieldState state, M3ModelFieldsException mfex) {
+        if (state != null && !state.same && state.newValue != null) {
+            Layer dbVal = null;
+            String objval = (String) state.newValue;
+            try {
+                dbVal = Layer.valueOf(objval);
+            } catch (Throwable t1) {
+                M3FieldException ex = mfex.addException(state.fieldName, "converting value from DB, invalid value", objval, t1);
+                state.exception = ex;
+            }
+            if (dbVal == null) {
+                M3FieldException ex = mfex.addException(state.fieldName, "converting value from DB, invalid value", objval);
+                state.exception = ex;
+            }
+            state.newValue = dbVal;
+        }
+    }
+
+    static int getColumnCount(ResultSetMetaData rsmd, M3ModelFieldsException mfex) {
+    	int col_cnt = -1;
+        try {
+        	col_cnt = rsmd.getColumnCount();
+        } catch (SQLException sqle) {
+            col_cnt = -1;
+            mfex.addException(null, "accessing SQL ResultSet or ResultSetMetaData", sqle);
+        }
+        return col_cnt;
+    }
+
+    static String getColumnName(ResultSetMetaData rsmd, int colIx, M3ModelFieldsException mfex) {
+    	String col_nm = null;
+        try {
+        	col_nm = rsmd.getColumnLabel(colIx);
+        } catch (SQLException sqle) {
+            col_nm = null;
+            mfex.addException(null, "accessing SQL ResultSet or ResultSetMetaData", sqle);
+        }
+        return col_nm;
+    }
 
     public enum DaoContext {
         ARTIFACT, 
@@ -304,10 +381,13 @@ public abstract class AbstractDao {
 		    rs = stmt.executeQuery(sqlstr);
 		    M3DaoHandlerParam param = new M3DaoHandlerParam(rs);
 		    M3DaoHandlerResult result = handler.apply(param);
-	        // TODO Check and do something with result.mfex
-		    result.artifacts.forEach(sa1 -> results.add(sa1));
+		    if (result.mfex != null && (result.mfex.getExceptions().length > 0 
+		            || result.mfex.getCause() != null)) {
+		        throw result.mfex;
+		    }
+            result.artifacts.forEach(sa1 -> results.add(sa1));
         } catch (SQLException ex) {
-            // TODO Handle exception
+            throw new M3ModelException("querying [" + sqlstr + "]", adum.getClass().getSimpleName());
         } finally {
             try {
                 if (rs != null && !rs.isClosed())
@@ -320,15 +400,6 @@ public abstract class AbstractDao {
                 // Ignore
             }
         }
-        // TODO Check and do something with mfex
-    }
-
-    public void registerHelperForType(Class<? extends SolutionArtifact> clazz, AbstractArtifactHelper helper) {
-        _helpers.putIfAbsent(clazz.getSimpleName(), helper);
-    }
-
-    public AbstractArtifactHelper getHelperForType(Class<? extends SolutionArtifact> clazz) {
-        return _helpers.get(clazz.getSimpleName());
     }
 
     void registerFieldSpec(String fldNm, String colNm, Class<?> fldCls, FieldReferenceKind fldRefTo, 
@@ -410,6 +481,97 @@ public abstract class AbstractDao {
             LogicCriteria c = new LogicCriteria(fldNm, opr, val, simple, negate);
             criteria.add(c);
             return this;
+        }
+    }
+
+    protected void buildWhereClause(CriteriaBuilder builder, StringBuilder sb) {
+        sb.append("WHERE ");
+        final AtomicBoolean notfirst = new AtomicBoolean(false);
+        builder.criteria.forEach(lc -> {
+            BasicCriteria bc1;
+            if (notfirst.get())
+                sb.append(" AND ");
+            else
+                notfirst.set(true);
+            switch (lc.op) {
+            case ASIS:
+                sb.append("(");
+                bc1 = lc.criterion1;
+                getWhereConditionFor(bc1.fieldName, bc1.op, bc1.value, sb);
+                sb.append(")");
+                break;
+            case OR:
+                sb.append("(");
+                sb.append("(");
+                bc1 = lc.criterion1;
+                getWhereConditionFor(bc1.fieldName, bc1.op, bc1.value, sb);
+                sb.append(")");
+                sb.append(" OR ");
+                BasicCriteria bc2 = lc.criterion2;
+                sb.append("(");
+                getWhereConditionFor(bc2.fieldName, bc2.op, bc2.value, sb);
+                sb.append(")");
+                sb.append(")");
+                break;
+            case NOT:
+                sb.append("NOT (");
+                bc1 = lc.criterion1;
+                getWhereConditionFor(bc1.fieldName, bc1.op, bc1.value, sb);
+                sb.append(")");
+                break;
+            }
+        });
+    }
+
+    protected void getWhereConditionFor(String fldName, BasicCriterionOperator op, Object value, StringBuilder sb) {
+        FieldMappingSpec spec = _fieldsMap.get(fldName);
+        if (spec.fieldRefersTo == FieldReferenceKind.IdForType || spec.fieldRefersTo == FieldReferenceKind.ForeignTable) {
+            return;
+        }
+        sb.append(spec.columnName);
+        sb.append(" ");
+        switch (op) {
+        case EQ:
+        	sb.append("=");
+            break;
+        case NE:
+    	    sb.append("<>");
+            break;
+        case GT:
+    	    sb.append(">");
+            break;
+        case GE:
+    	    sb.append(">=");
+            break;
+        case LE:
+    	    sb.append("<=");
+            break;
+        case LT:
+    	    sb.append("<");
+            break;
+        default:
+            break;
+        }
+        sb.append(" ");
+        switch (spec.fieldRefersTo) {
+        case EnumType:
+            sb.append("'");
+            sb.append(value.toString());
+            sb.append("'");
+            break;
+        case IdForType: // should not happen
+            break;
+        case ForeignTable: // should not happen
+            break;
+        default: // NULL
+            if (spec.fieldClass == String.class) {
+                sb.append("'");
+                sb.append(value.toString());
+                sb.append("'");
+            } else if (spec.fieldClass.isPrimitive()) {
+                sb.append(value.toString());
+            }
+            break;
         }
     }
 }

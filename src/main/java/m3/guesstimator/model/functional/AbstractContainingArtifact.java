@@ -3,17 +3,12 @@ package m3.guesstimator.model.functional;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Transient;
-
 import m3.guesstimator.model.ConstituentSet;
 import m3.guesstimator.model.ContainingSolutionArtifact;
 import m3.guesstimator.model.ParseablePrimaryCollection;
 import m3.guesstimator.model.SolutionArtifact;
 import m3.guesstimator.model.reference.ConstructionPhase;
 
-@MappedSuperclass
 public abstract class AbstractContainingArtifact extends AbstractSolutionArtifact
 		implements ContainingSolutionArtifact {
     private static final long serialVersionUID = 1L;
@@ -39,13 +34,14 @@ public abstract class AbstractContainingArtifact extends AbstractSolutionArtifac
         constructionEstimates = new Long[ConstructionPhase.values().length];
         Arrays.fill(constructionEstimates, 0L);
         compositionFactors = new ParseablePrimaryCollection<ConstructionPhase, Long>(getClass().getSimpleName(), 
-                "ConstructionOverheads", ConstructionPhase.class, Long.class, 0L);
+                "CompositionFactors", ConstructionPhase.class, Long.class, 0L);
     }
 
-    @Column(name = "FUNCTIONAL", nullable = false)
     @Override
     public Long getFunctionalEstimate() {
-        computeFunctionalEstimate();
+        if (! functionEstimateComputed) {
+            computeFunctionalEstimate();
+        }
         return functionalEstimate;
     }
     @Override
@@ -57,10 +53,11 @@ public abstract class AbstractContainingArtifact extends AbstractSolutionArtifac
         }
     }
 
-    @Column(name = "PERFORMANCE", nullable = false)
     @Override
     public Long getPerformanceEstimate() {
-        computePerformanceEstimate();
+        if (! perfEstimateComputed) {
+            computePerformanceEstimate();
+        }
         return performanceEstimate;
     }
     @Override
@@ -72,7 +69,6 @@ public abstract class AbstractContainingArtifact extends AbstractSolutionArtifac
         }
     }
 
-    @Column(name = "SECURITY", nullable = false)
     @Override
     public Long getSecurityEstimate() {
         if (! secEstimateComputed) {
@@ -89,7 +85,6 @@ public abstract class AbstractContainingArtifact extends AbstractSolutionArtifac
         }
     }
 
-    @Column(name = "COMPOSITION_FACTORS", nullable = false)
     public String getStrCompositionFactors() {
         return strCompositionFactors;
     }
@@ -99,7 +94,6 @@ public abstract class AbstractContainingArtifact extends AbstractSolutionArtifac
         constructEstimateComputed = false;
     }
 
-    @Column(name = "CONSTRUCT_OVERHEADS", nullable = false)
     public String getStrConstructionOverheads() {
         return strConstructionOverheads;
     }
@@ -126,7 +120,6 @@ public abstract class AbstractContainingArtifact extends AbstractSolutionArtifac
         }
     }
 
-    @Transient
     @Override
     public Long getConstructPhaseEstimate(ConstructionPhase phase) {
         if (! constructEstimateComputed) {
@@ -136,7 +129,6 @@ public abstract class AbstractContainingArtifact extends AbstractSolutionArtifac
         return constructionEstimates[phase.ordinal()];
     }
 
-    @Transient
     @Override
     public Long getEstimate() {
         if (! constructEstimateComputed) {
@@ -150,7 +142,6 @@ public abstract class AbstractContainingArtifact extends AbstractSolutionArtifac
         return constructEstimate + getVerificationEstimate();
     }
 
-    @Transient
     public Long getVerificationEstimate() {
         return getFunctionalEstimate() + getPerformanceEstimate() + getSecurityEstimate();
     }
@@ -162,7 +153,6 @@ public abstract class AbstractContainingArtifact extends AbstractSolutionArtifac
      * Must override if derived.
      * @return
      */
-    @Transient
     protected boolean areOtherEstimatesComputed() {
         return false;
     }
@@ -173,7 +163,6 @@ public abstract class AbstractContainingArtifact extends AbstractSolutionArtifac
      * Must override if Construction Overheads need to be considered.
      * @return
      */
-    @Transient
     protected boolean hasConstructOverheads() {
         return false;
 	}

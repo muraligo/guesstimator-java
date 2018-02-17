@@ -1,7 +1,9 @@
 package m3.guesstimator.model.reference;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.time.LocalDateTime;
@@ -21,15 +23,17 @@ public class ComponentTypeTest {
 	private static final ComponentContext COMPT_CTX = ComponentContext.DevOps;
 	private static final Layer COMPT_LAYER = Layer.Technical;
 	private static final String COMPT_DATA = 
-			"[ {\"phase\": \"Analysis\", \"value\": 5}, {\"phase\": \"Design\", \"value\": 10}, "
-					+ " {\"phase\": \"Build\", \"value\": 10}, {\"phase\": \"Test\", \"value\": 5} ]";
+			"[ {\"phase\": \"Analysis\", \"value\": \"5\"}, {\"phase\": \"Design\", \"value\": \"10\"}, "
+					+ " {\"phase\": \"Build\", \"value\": \"10\"}, {\"phase\": \"Test\", \"value\": \"5\"} ]";
 
-	private ComponentType target = null;
+    private ComponentType target = null;
+    private LocalDateTime currTime = null;
 
-	@Before
-	public void setUp() throws Exception {
-		target = new ComponentType();
-	}
+    @Before
+    public void setUp() throws Exception {
+        currTime = LocalDateTime.now();
+        target = new ComponentType(currTime);
+    }
 
 	@After
 	public void tearDown() throws Exception {
@@ -37,30 +41,27 @@ public class ComponentTypeTest {
 
 	@Test
 	public void testSetStrConstructCosts() {
-		LocalDateTime updateTime = target.constructCostUpdatedAt;
-		LocalDateTime parseTime = target.constructCostParsedAt;
-//		System.out.println("Updated = " + updateTime + ", parsed = " + parseTime);
+//		System.out.println("Initial Time = " + currTime);
 		target.setName(COMPT_NAME);
 		target.setDescription(COMPT_DESC);
 		target.setContext(COMPT_CTX);
 		target.setArchitecturalLayer(COMPT_LAYER);
-		assertEquals(parseTime, target.constructCostParsedAt);
-		assertEquals(updateTime, target.constructCostUpdatedAt);
+		assertTrue(target.isConstructParseTimeSameAs(currTime));
+		assertTrue(target.isConstructUpdateTimeSameAs(currTime));
 		try {
 			Thread.sleep(10);
 		} catch (InterruptedException ie) {
 			//
 		}
 		target.setStrConstructCosts(COMPT_DATA);
-		assertEquals(parseTime, target.constructCostParsedAt);
-		printTimeCompare("Update", updateTime, target.constructCostUpdatedAt);
-		assertNotEquals(updateTime, target.constructCostUpdatedAt);
+		assertTrue(target.isConstructParseTimeSameAs(currTime));
+		assertFalse(target.isConstructUpdateTimeSameAs(currTime));
+//		printTimeCompare("Update", updateTime, target.constructCostUpdatedAt);
 	}
 
 	@Test
 	public void testGetConstructCostOkInitially() {
 		fillInFieldValues();
-		LocalDateTime parseTime = target.constructCostParsedAt;
 		Map<ConstructionPhase, Long> costs = new HashMap<ConstructionPhase, Long>();
 		try {
 			Thread.sleep(100);
@@ -71,12 +72,12 @@ public class ComponentTypeTest {
 			Long c = target.getConstructCost(p);
 			costs.put(p, c);
 		}
-		printTimeCompare("Parse", parseTime, target.constructCostParsedAt);
-		assertNotEquals(parseTime, target.constructCostParsedAt);
+//		printTimeCompare("Parse", parseTime, target.constructCostParsedAt);
+		assertFalse(target.isConstructParseTimeSameAs(currTime));
 		assertEquals(5L, costs.get(ConstructionPhase.Analysis).longValue());
 		assertEquals(10L, costs.get(ConstructionPhase.Design).longValue());
-		assertEquals(10L, costs.get(ConstructionPhase.Build).longValue());
-		assertEquals(5L, costs.get(ConstructionPhase.Test).longValue());
+		assertEquals(10L, costs.get(ConstructionPhase.Develop).longValue());
+		assertEquals(5L, costs.get(ConstructionPhase.Verify).longValue());
 	}
 
 	@Test
@@ -87,7 +88,6 @@ public class ComponentTypeTest {
 			Long c = target.getConstructCost(p);
 			inicosts.put(p, c);
 		}
-		LocalDateTime parseTime = target.constructCostParsedAt;
 		Map<ConstructionPhase, Long> modcosts = new HashMap<ConstructionPhase, Long>();
 		String modData = 
 				"[ {\"phase\": \"Analysis\", \"value\": 7}, {\"phase\": \"Design\", \"value\": 10}, "
@@ -102,11 +102,11 @@ public class ComponentTypeTest {
 			Long c = target.getConstructCost(p);
 			modcosts.put(p, c);
 		}
-		assertNotEquals(parseTime, target.constructCostParsedAt);
+		assertFalse(target.isConstructParseTimeSameAs(currTime));
 		assertNotEquals(inicosts.get(ConstructionPhase.Analysis).longValue(), modcosts.get(ConstructionPhase.Analysis).longValue());
 		assertEquals(inicosts.get(ConstructionPhase.Design).longValue(), modcosts.get(ConstructionPhase.Design).longValue());
-		assertNotEquals(inicosts.get(ConstructionPhase.Build).longValue(), modcosts.get(ConstructionPhase.Build).longValue());
-		assertNotEquals(inicosts.get(ConstructionPhase.Test).longValue(), modcosts.get(ConstructionPhase.Test).longValue());
+		assertNotEquals(inicosts.get(ConstructionPhase.Develop).longValue(), modcosts.get(ConstructionPhase.Develop).longValue());
+		assertNotEquals(inicosts.get(ConstructionPhase.Verify).longValue(), modcosts.get(ConstructionPhase.Verify).longValue());
 	}
 
 	@Test

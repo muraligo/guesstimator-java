@@ -30,6 +30,7 @@ class GuesstimatorInitializer {
 
     void initializeComponentType(EstimatorComponentTypeDao dao) {
 //		em.getTransaction().begin();
+    	dao.removeAll();
 
 		// DevEnv subsystem
         persistComponentType("Dev.Physical.Run-Compute", "acquisition and initialization of environment", 

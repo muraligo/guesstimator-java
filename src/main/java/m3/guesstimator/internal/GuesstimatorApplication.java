@@ -35,13 +35,22 @@ public class GuesstimatorApplication {
         initializer.initializeDao();
         initializer.initializeComponentType((EstimatorComponentTypeDao) _daoMap.get("component_type"));
 
+        // ******** verbs for component type resource **********
+        post("/getall/component_type", (req, res) -> {
+            ComponentTypeCollectionResource resource = new ComponentTypeCollectionResource();
+            // retrieve all from cache and so get a JSON
+            String result = resource.findAll();
+            res.status(200);
+            res.type("application/json");
+            return result;
+        });
+
         // ******** verbs for component resource **********
         post("/new/component", (req, res) -> {
             Gson gson = new Gson();
             Component ent = gson.fromJson(req.body(), Component.class);
             EstimatorComponentDao dao = (EstimatorComponentDao) _daoMap.get("component");
-            // ComponentResource resource = new ComponentResource();
-            AbstractServerResource resource = null;
+            ComponentResource resource = new ComponentResource();
             resource.dao = dao;
             EstimatorResponse resp = resource.put(ent);
             // Handle errors
