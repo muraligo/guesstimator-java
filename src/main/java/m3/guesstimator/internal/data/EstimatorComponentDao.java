@@ -14,15 +14,15 @@ import m3.guesstimator.model.M3ModelFieldsException;
 import m3.guesstimator.model.SolutionArtifact;
 import m3.guesstimator.model.M3ModelFieldsException.M3FieldException;
 import m3.guesstimator.model.functional.AbstractSolutionArtifact;
-import m3.guesstimator.model.functional.Component;
+import m3.guesstimator.model.functional.M3Component;
 import m3.guesstimator.model.reference.Complexity;
 import m3.guesstimator.model.reference.ComponentContext;
-import m3.guesstimator.model.reference.ComponentType;
+import m3.guesstimator.model.reference.M3ComponentType;
 import m3.guesstimator.model.reference.Language;
 import m3.guesstimator.model.reference.Layer;
 
 public class EstimatorComponentDao extends AbstractDao {
-    private static final Class<?> ARTIFACT_TYPE = Component.class;
+    private static final Class<?> ARTIFACT_TYPE = M3Component.class;
     private static final Class<?> CONTAINING_ARTIFACT_TYPE = ContainingSolutionArtifact.class;
     private static final String _TABLE_NAME = "COMPONENT";
     private static final String _TYPE_COLUMN = "COMPONENT_TYPE";
@@ -55,7 +55,7 @@ public class EstimatorComponentDao extends AbstractDao {
     }
 
     public SolutionArtifact put(SolutionArtifact sa) {
-        EntityState es = getState(sa);
+        M3DaoEntityState es = getState(sa);
         SolutionArtifact resVal = null;
         if (es.isNew()) {
             resVal = addNew(sa);
@@ -87,7 +87,7 @@ public class EstimatorComponentDao extends AbstractDao {
     		    if (param.rs.first()) {
     		        ResultSetMetaData rsmd = param.rs.getMetaData();
     		        List<M3DaoFieldState> fieldsState = new ArrayList<M3DaoFieldState>();
-    		        Component sa1 = retrieveValues(param.rs, rsmd, fieldsState, mfex);
+    		        M3Component sa1 = retrieveValues(param.rs, rsmd, fieldsState, mfex);
     		        // TODO Do something with fieldsState
     		        result.add(fieldsState);
     		        result.add(sa1);
@@ -101,7 +101,7 @@ public class EstimatorComponentDao extends AbstractDao {
         return results.get(0);
     }
 
-    public List<SolutionArtifact> find(SolutionArtifact dummy, CriteriaBuilder cb) {
+    public List<SolutionArtifact> find(SolutionArtifact dummy, M3DaoCriteriaBuilder cb) {
         AbstractSolutionArtifact adum = (AbstractSolutionArtifact)dummy;
         StringBuilder colsb = new StringBuilder();
         buildExtendedColumnList(colsb);
@@ -126,7 +126,7 @@ public class EstimatorComponentDao extends AbstractDao {
     		    if (param.rs.first()) {
     		        ResultSetMetaData rsmd = param.rs.getMetaData();
     		        List<M3DaoFieldState> fieldsState = new ArrayList<M3DaoFieldState>();
-    		        Component sa1 = retrieveValues(param.rs, rsmd, fieldsState, mfex);
+    		        M3Component sa1 = retrieveValues(param.rs, rsmd, fieldsState, mfex);
     		        // TODO Do something with fieldsState
     		        result.add(fieldsState);
     		        result.add(sa1);
@@ -149,7 +149,7 @@ public class EstimatorComponentDao extends AbstractDao {
 
     protected SolutionArtifact addNew(SolutionArtifact sa) {
         String saname = sa.getName();
-        Component ct = (Component) sa;
+        M3Component ct = (M3Component) sa;
         StringBuilder valuesb = new StringBuilder();
         StringBuilder colsb = new StringBuilder();
         buildBasicColumnList(colsb);
@@ -239,10 +239,10 @@ public class EstimatorComponentDao extends AbstractDao {
     @Override
     protected void populateFieldSpecs() {
         registerBaseFieldSpecs();
-        registerFieldSpec("complexity", _COMPLEXITY_COLUMN, Complexity.class, FieldReferenceKind.EnumType, null, null, null);
-        registerFieldSpec("layer", _LAYER_COLUMN, Layer.class, FieldReferenceKind.EnumType, null, null, null);
-        registerFieldSpec("language", _LANGUAGE_COLUMN, Complexity.class, FieldReferenceKind.EnumType, null, null, null);
-        registerFieldSpec("type", _TYPE_COLUMN, Layer.class, FieldReferenceKind.EnumType, null, null, null);
+        registerFieldSpec("complexity", _COMPLEXITY_COLUMN, Complexity.class, M3DaoFieldReferenceKind.EnumType, null, null, null);
+        registerFieldSpec("layer", _LAYER_COLUMN, Layer.class, M3DaoFieldReferenceKind.EnumType, null, null, null);
+        registerFieldSpec("language", _LANGUAGE_COLUMN, Complexity.class, M3DaoFieldReferenceKind.EnumType, null, null, null);
+        registerFieldSpec("type", _TYPE_COLUMN, Layer.class, M3DaoFieldReferenceKind.EnumType, null, null, null);
         registerFieldSpec("count", _COUNT_COLUMN, Long.class, null, null, null, null);
     }
 
@@ -275,14 +275,14 @@ public class EstimatorComponentDao extends AbstractDao {
         colsb.append(", ct." + EstimatorComponentTypeDao._COST_COLUMN);
     }
 
-    private void checkAndRefresh(ResultSet rs, Component ct, String colName, List<M3DaoFieldState> fieldsState, M3ModelFieldsException modelException) {
+    private void checkAndRefresh(ResultSet rs, M3Component ct, String colName, List<M3DaoFieldState> fieldsState, M3ModelFieldsException modelException) {
         M3DaoFieldState state = null;
-        ComponentType compType = new ComponentType();
+        M3ComponentType compType = new M3ComponentType();
         int cnix = colName.indexOf(".");
         String columnName = (cnix > 0) ? colName.substring(cnix+1) : colName;
         if (_DESC_COLUMN.equals(columnName) && colName.startsWith("cp.")) {
             state = isSameStringValue(rs, "description", colName, ct.getDescription(), modelException);
-            if (!state.same) {
+            if (!state.same && !state.same && state.newValue != null) {
                 ct.setDescription((String) state.newValue);
             }
         } else if (_COMPLEXITY_COLUMN.equals(columnName)) {
@@ -340,13 +340,13 @@ public class EstimatorComponentDao extends AbstractDao {
         }
     }
 
-    private Component retrieveValues(ResultSet rs, ResultSetMetaData rsmd, List<M3DaoFieldState> fieldsState, M3ModelFieldsException mfex) {
+    private M3Component retrieveValues(ResultSet rs, ResultSetMetaData rsmd, List<M3DaoFieldState> fieldsState, M3ModelFieldsException mfex) {
         int colCnt = getColumnCount(rsmd, mfex);
         if (colCnt < 0) { // was an error so return, exception already recorded
             return null;
         }
-        Component ct = new Component();
-        ComponentType compType = new ComponentType();
+        M3Component ct = new M3Component();
+        M3ComponentType compType = new M3ComponentType();
         for (int colIx = 0; colIx < colCnt; colIx++) {
             M3DaoFieldState state = null;
             String colName = getColumnName(rsmd, colIx, mfex);

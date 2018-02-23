@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import m3.guesstimator.internal.data.EstimatorComponentDao;
 import m3.guesstimator.internal.data.EstimatorComponentTypeDao;
 import m3.guesstimator.model.reference.ComponentContext;
-import m3.guesstimator.model.reference.ComponentType;
+import m3.guesstimator.model.reference.M3ComponentType;
 import m3.guesstimator.model.reference.Layer;
 import m3.guesstimator.service.ApplicationContext;
 
@@ -516,8 +516,8 @@ class GuesstimatorInitializer {
 //		em.close();
 	}
 
-    private ComponentType createComponentType(String name, String desc, ComponentContext compCtx, Layer layer, String costs) {
-        ComponentType t = new ComponentType();
+    private M3ComponentType createComponentType(String name, String desc, ComponentContext compCtx, Layer layer, String costs) {
+        M3ComponentType t = new M3ComponentType();
         t.setName(name);
         t.setDescription(desc);
         t.setStrConstructCosts(costs);
@@ -527,18 +527,18 @@ class GuesstimatorInitializer {
     }
 
     private void persistComponentType(String name, String desc, ComponentContext compCtx, Layer layer, String costs, EstimatorComponentTypeDao dao) {
-        ComponentType ct = createComponentType(name, desc, compCtx, layer, costs);
+        M3ComponentType ct = createComponentType(name, desc, compCtx, layer, costs);
         // em.persist(ct);
-        ComponentType ct2 = dao.put(ct);
+        M3ComponentType ct2 = dao.put(ct);
         String[] name_parts = ct2.getName().split(".");
-        Map<String, Map<String, ComponentType>> env = GuesstimatorApplication._componentTypeCache.get(name_parts[0]);
+        Map<String, Map<String, M3ComponentType>> env = GuesstimatorApplication._componentTypeCache.get(name_parts[0]);
         if (env == null) {
-            env = Collections.synchronizedMap(new ConcurrentHashMap<String, Map<String, ComponentType>>(20));
+            env = Collections.synchronizedMap(new ConcurrentHashMap<String, Map<String, M3ComponentType>>(20));
             GuesstimatorApplication._componentTypeCache.put(name_parts[0], env);
         }
-        Map<String, ComponentType> resource_type = env.get(name_parts[1]);
+        Map<String, M3ComponentType> resource_type = env.get(name_parts[1]);
         if (resource_type == null) {
-            resource_type = Collections.synchronizedMap(new ConcurrentHashMap<String, ComponentType>(20));
+            resource_type = Collections.synchronizedMap(new ConcurrentHashMap<String, M3ComponentType>(20));
             env.put(name_parts[1], resource_type);
         }
         resource_type.put(ct2.getName(), ct2);

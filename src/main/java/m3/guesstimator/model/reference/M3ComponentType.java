@@ -4,9 +4,8 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import m3.guesstimator.model.ParseablePrimaryCollection;
-import m3.guesstimator.model.SolutionArtifact;
 
-public class ComponentType implements Serializable, Comparable<ComponentType>, Cloneable {
+public class M3ComponentType implements Serializable, Comparable<M3ComponentType>, Cloneable {
     private static final long serialVersionUID = 1L;
 
 	private String name;
@@ -18,12 +17,12 @@ public class ComponentType implements Serializable, Comparable<ComponentType>, C
 	// fields below are non-persistent
     transient ParseablePrimaryCollection<ConstructionPhase, Long> constructCosts;
 
-    public ComponentType() {
+    public M3ComponentType() {
         constructCosts = new ParseablePrimaryCollection<ConstructionPhase, Long>(getClass().getSimpleName(), 
                 "ConstructCosts", ConstructionPhase.class, Long.class, 0L);
 	}
 
-    ComponentType(LocalDateTime currTime) {
+    M3ComponentType(LocalDateTime currTime) {
         constructCosts = new ParseablePrimaryCollection<ConstructionPhase, Long>(getClass().getSimpleName(), 
                 "ConstructCosts", ConstructionPhase.class, Long.class, 0L, currTime);
 	}
@@ -88,8 +87,25 @@ public class ComponentType implements Serializable, Comparable<ComponentType>, C
     }
 
     @Override
-    public int compareTo(ComponentType o) {
-        return getName().compareTo(o.getName());
+    public int compareTo(M3ComponentType o) {
+        int res = getName().compareTo(o.getName());
+        return (res == 0) ? getVersion().compareTo(o.getVersion()) : res;
+    }
+
+    @Override
+    public int hashCode() {
+        return getName().hashCode() * 31 + getVersion().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return compareTo((M3ComponentType)obj) == 0;
+    }
+
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        // TODO Auto-generated method stub
+        return super.clone();
     }
 
     boolean isConstructParseTimeSameAs(LocalDateTime currTime) {

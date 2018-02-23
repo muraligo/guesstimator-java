@@ -23,7 +23,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
 import m3.guesstimator.internal.data.EstimatorComponentTypeDao;
-import m3.guesstimator.model.reference.ComponentType;
+import m3.guesstimator.model.reference.M3ComponentType;
 import m3.guesstimator.model.reference.ConstructionPhase;
 import m3.guesstimator.service.ApplicationContext;
 
@@ -32,7 +32,7 @@ public class GuesstimatorInitializerTest {
     private static final boolean DEBUG = true;
 
     private GuesstimatorInitializer target;
-    private HashMap<String, ComponentType> data = new HashMap<String, ComponentType>();
+    private HashMap<String, M3ComponentType> data = new HashMap<String, M3ComponentType>();
 
     @Mock
     ApplicationContext ctx;
@@ -47,17 +47,17 @@ public class GuesstimatorInitializerTest {
         target = new GuesstimatorInitializer(app);
         target.ctx = ctx;
         doNothing().when(dao).removeAll();
-        doAnswer(new Answer<ComponentType>() {
+        doAnswer(new Answer<M3ComponentType>() {
 
             @Override
-            public ComponentType answer(InvocationOnMock invocation) throws Throwable {
-                ComponentType ct = (ComponentType) invocation.getArguments()[0];
+            public M3ComponentType answer(InvocationOnMock invocation) throws Throwable {
+                M3ComponentType ct = (M3ComponentType) invocation.getArguments()[0];
                 assertNotNull(ct);
                 data.put(ct.getName(), ct);
                 return ct;
             }
 			
-        }).when(dao).put(isA(ComponentType.class));
+        }).when(dao).put(isA(M3ComponentType.class));
     }
 
     @After
@@ -74,7 +74,7 @@ public class GuesstimatorInitializerTest {
         }
 //		verify(tx, times(5)).commit();
         assertEquals(89, data.size());
-        ComponentType ct = data.get("Dev.Physical.Build.Storage");
+        M3ComponentType ct = data.get("Dev.Physical.Build.Storage");
         Long res = null;
         try {
             res = ct.getConstructCost(ConstructionPhase.Develop);

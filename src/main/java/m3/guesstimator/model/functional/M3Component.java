@@ -1,18 +1,17 @@
 package m3.guesstimator.model.functional;
 
 import m3.guesstimator.model.ContainingSolutionArtifact;
-import m3.guesstimator.model.SolutionArtifact;
 import m3.guesstimator.model.reference.Complexity;
-import m3.guesstimator.model.reference.ComponentType;
+import m3.guesstimator.model.reference.M3ComponentType;
 import m3.guesstimator.model.reference.ConstructionPhase;
 import m3.guesstimator.model.reference.Language;
 import m3.guesstimator.model.reference.Layer;
 
-public class Component extends AbstractSolutionArtifact {
+public class M3Component extends AbstractSolutionArtifact {
     private static final long serialVersionUID = 1L;
 
 	private ContainingSolutionArtifact parent;
-	private ComponentType type;
+	private M3ComponentType type;
 	private Complexity complexity;
 	private Layer layer;
 	private Language language;
@@ -28,10 +27,10 @@ public class Component extends AbstractSolutionArtifact {
         this.parent = parent;
     }
 
-    public ComponentType getType() {
+    public M3ComponentType getType() {
         return type;
     }
-    public void setType(ComponentType value) {
+    public void setType(M3ComponentType value) {
         type = value;
         constructEstimateComputed = false;
     }
@@ -90,6 +89,30 @@ public class Component extends AbstractSolutionArtifact {
         return estimate;
     }
 
+    @Override
+    public String toString() {
+        StringBuffer sb = new StringBuffer("Component#");
+        sb.append(super.toString());
+        sb.append("{");
+        sb.append(type);
+        sb.append(", complexity:");
+        sb.append(complexity);
+        sb.append(", layer:");
+        sb.append(layer);
+        sb.append(", language:");
+        sb.append(language);
+        sb.append(", count");
+        sb.append(count);
+        sb.append("}");
+        return sb.toString();
+    }
+
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        // TODO Auto-generated method stub
+        return super.clone();
+    }
+
     private void computeConstructEstimate() {
         for (ConstructionPhase p : ConstructionPhase.values()) {
             Long estimate = getType().getConstructCost(p);
@@ -98,30 +121,4 @@ public class Component extends AbstractSolutionArtifact {
             constructionEstimates[p.ordinal()] = estimate;
         }
     }
-
-/*
-    @Override
-    protected String getOtherFieldValue(String fldName) {
-        String value = null;
-        if ("complexity".equals(fldName))
-            value = "'" + getComplexity().name() + "'";
-        else if ("layer".equals(fldName))
-            value = "'" + getLayer().name() + "'";
-        else if ("language".equals(fldName))
-            value = "'" + getLanguage().name() + "'";
-        else if ("count".equals(fldName))
-            value = getCount().toString();
-        else if ("type".equals(fldName))
-            value = getType().getName(); // name is the id which is the foreign key
-        else if ("parent".equals(fldName))
-            value = getParent().getName(); // name is the id which is the foreign key
-        return value;
-    }
-*/
-	@Override
-	public SolutionArtifact createNew() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 }

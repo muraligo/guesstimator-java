@@ -33,19 +33,19 @@ public abstract class AbstractDao {
     protected static final String _DESC_COLUMN = "DESCRIPTION";
     protected static final String _VERSION_COLUMN = "VERSION";
     protected static final String _PARENT_COLUMN = "PARENT";
-    protected static final Map<String, FieldMappingSpec> _fieldsMap = Collections.synchronizedMap(
-            new ConcurrentHashMap<String, FieldMappingSpec>(40));
-    protected static final Map<String, EntityState> _entities = Collections.synchronizedMap(
-            new ConcurrentHashMap<String, EntityState>(2000));
+    protected static final Map<String, M3DaoFieldMappingSpec> _fieldsMap = Collections.synchronizedMap(
+            new ConcurrentHashMap<String, M3DaoFieldMappingSpec>(40));
+    protected static final Map<String, M3DaoEntityState> _entities = Collections.synchronizedMap(
+            new ConcurrentHashMap<String, M3DaoEntityState>(2000));
     protected static ComboPooledDataSource cpds = null;
-    protected final DaoContext context;
+    protected final M3DaoContext context;
 
     public AbstractDao() {
-        context = DaoContext.ARTIFACT;
+        context = M3DaoContext.ARTIFACT;
         initializeConnectionPooling();
     }
 
-    public AbstractDao(DaoContext context) {
+    public AbstractDao(M3DaoContext context) {
         this.context = context;
         initializeConnectionPooling();
     }
@@ -54,18 +54,18 @@ public abstract class AbstractDao {
         ensureObjectOfType(o);
         Class<?> typ = getTypeOfObject(o);
         String name = getNameOfObject(o);
-        EntityState es = _entities.putIfAbsent(name, new EntityState(EntityOp.NONE, typ, name));
+        M3DaoEntityState es = _entities.putIfAbsent(name, new M3DaoEntityState(M3DaoEntityOp.NONE, typ, name));
         if (es == null)
             es = _entities.get(name);
         es.lockForModification();
         return o;
     }
 
-    public EntityState getState(Object o) {
+    public M3DaoEntityState getState(Object o) {
         ensureObjectOfType(o);
         Class<?> typ = getTypeOfObject(o);
         String name = getNameOfObject(o);
-        EntityState es = _entities.putIfAbsent(name, new EntityState(EntityOp.NEW, typ, name));
+        M3DaoEntityState es = _entities.putIfAbsent(name, new M3DaoEntityState(M3DaoEntityOp.NEW, typ, name));
         if (es == null) {
             es = _entities.get(name);
         } else {
@@ -220,34 +220,34 @@ public abstract class AbstractDao {
         return col_nm;
     }
 
-    public enum DaoContext {
+    public enum M3DaoContext {
         ARTIFACT, 
         COMPONENT_TYPE
     }
 
-    protected enum EntityOp {
+    protected enum M3DaoEntityOp {
         NONE, 
         NEW,
         UPDATE,
         DELETE
     }
 
-    protected class EntityState {
-        private AtomicReference<EntityOp> _op;
+    protected class M3DaoEntityState {
+        private AtomicReference<M3DaoEntityOp> _op;
         private AtomicBoolean _deleted;
         private AtomicBoolean _lockedForMod;
         private final Class<?> _entityClass;
         private final String _entityName;
 
-        public EntityState(EntityOp op, Class<?> entityClazz, String entityName) {
-            if (op != EntityOp.NEW && op != EntityOp.NONE) {
+        public M3DaoEntityState(M3DaoEntityOp op, Class<?> entityClazz, String entityName) {
+            if (op != M3DaoEntityOp.NEW && op != M3DaoEntityOp.NONE) {
                 throw new IllegalArgumentException("Entity " + entityName + " of type " + entityClazz.getSimpleName() + " must be new or unmodified to be introduced into the cache!!!");
             }
             _entityClass = entityClazz;
             _entityName = entityName;
-            _op = new AtomicReference<EntityOp>(op);
+            _op = new AtomicReference<M3DaoEntityOp>(op);
             _deleted = new AtomicBoolean(false);
-            _lockedForMod = new AtomicBoolean((op == EntityOp.NEW));
+            _lockedForMod = new AtomicBoolean((op == M3DaoEntityOp.NEW));
         }
 
         public void lockForModification() {
@@ -271,7 +271,7 @@ public abstract class AbstractDao {
                     System.err.println("[WARNING] Entity " + _entityName + " of type " + _entityClass.getSimpleName() + " is already unlocked!!!");
                 }
                 _lockedForMod.compareAndSet(true, false);
-                _op.set(EntityOp.NONE);
+                _op.set(M3DaoEntityOp.NONE);
             }
         }
 
@@ -280,15 +280,15 @@ public abstract class AbstractDao {
         }
 
         public boolean isNew() {
-            return _op.get() == EntityOp.NEW;
+            return _op.get() == M3DaoEntityOp.NEW;
         }
 
         public boolean needsDeleting() {
-            return _op.get() == EntityOp.DELETE;
+            return _op.get() == M3DaoEntityOp.DELETE;
         }
 
         public boolean isDirty() {
-            return _op.get() != EntityOp.NONE;
+            return _op.get() != M3DaoEntityOp.NONE;
         }
 
         public void setUpdate() {
@@ -297,7 +297,7 @@ public abstract class AbstractDao {
                     throw new IllegalStateException("Entity " + _entityName + " of type " + _entityClass.getSimpleName() + " is already locked!!!");
                 }
                 _lockedForMod.set(true);
-                _op.set(EntityOp.UPDATE);
+                _op.set(M3DaoEntityOp.UPDATE);
             }
         }
     }
@@ -402,9 +402,9 @@ public abstract class AbstractDao {
         }
     }
 
-    void registerFieldSpec(String fldNm, String colNm, Class<?> fldCls, FieldReferenceKind fldRefTo, 
+    void registerFieldSpec(String fldNm, String colNm, Class<?> fldCls, M3DaoFieldReferenceKind fldRefTo, 
     	    Class<?> fldRefCls, String fldRefTbl, String fldRefNm) {
-        FieldMappingSpec fspec = new FieldMappingSpec();
+        M3DaoFieldMappingSpec fspec = new M3DaoFieldMappingSpec();
         fspec.fieldName = fldNm;
         fspec.columnName = colNm;
         fspec.fieldClass = fldCls;
@@ -415,7 +415,7 @@ public abstract class AbstractDao {
         _fieldsMap.put(fldNm,  fspec);
     }
 
-    FieldMappingSpec getFieldSpec(String name) {
+    M3DaoFieldMappingSpec getFieldSpec(String name) {
         return _fieldsMap.get(name);
     }
 
@@ -431,64 +431,64 @@ public abstract class AbstractDao {
 
     abstract protected void buildExtendedColumnList(StringBuilder colsb);
 
-    public class BasicCriteria {
+    public class M3DaoBasicCriteria {
         public final String fieldName;
         public final BasicCriterionOperator op;
         public final Object value;
 
-        public BasicCriteria(String fldNm, BasicCriterionOperator opr, Object val) {
+        public M3DaoBasicCriteria(String fldNm, BasicCriterionOperator opr, Object val) {
             fieldName = fldNm;
             op = opr;
             value = val;
         }
     }
 
-    public class LogicCriteria {
-        public final BasicCriteria criterion1;
+    public class M3DaoLogicCriteria {
+        public final M3DaoBasicCriteria criterion1;
         public final LogicCriterionOperator op;
-        public final BasicCriteria criterion2;
+        public final M3DaoBasicCriteria criterion2;
 
-        public LogicCriteria(BasicCriteria c1, LogicCriterionOperator opr, BasicCriteria c2) {
+        public M3DaoLogicCriteria(M3DaoBasicCriteria c1, LogicCriterionOperator opr, M3DaoBasicCriteria c2) {
             criterion1 = c1;
             op = opr;
             criterion2 = c2;
         }
 
-        public LogicCriteria(String fldNm, BasicCriterionOperator opr, Object val, boolean simple, boolean negate) {
+        public M3DaoLogicCriteria(String fldNm, BasicCriterionOperator opr, Object val, boolean simple, boolean negate) {
         	if (!simple && !negate)
         	    throw new IllegalArgumentException("Single basic criterion should be single or negate!!!");
-            criterion1 = new BasicCriteria(fldNm, opr, val);
+            criterion1 = new M3DaoBasicCriteria(fldNm, opr, val);
             op = simple ? LogicCriterionOperator.ASIS : LogicCriterionOperator.NOT;
             criterion2 = null;
         }
     }
 
-    public class CriteriaBuilder {
-        public final List<LogicCriteria> criteria = new ArrayList<LogicCriteria>();
+    public class M3DaoCriteriaBuilder {
+        public final List<M3DaoLogicCriteria> criteria = new ArrayList<M3DaoLogicCriteria>();
 
-        public CriteriaBuilder add(LogicCriteria c) {
+        public M3DaoCriteriaBuilder add(M3DaoLogicCriteria c) {
             criteria.add(c);
             return this;
         }
 
-        public CriteriaBuilder add(BasicCriteria c1, LogicCriterionOperator opr, BasicCriteria c2) {
-            LogicCriteria c = new LogicCriteria(c1, opr, c2);
+        public M3DaoCriteriaBuilder add(M3DaoBasicCriteria c1, LogicCriterionOperator opr, M3DaoBasicCriteria c2) {
+            M3DaoLogicCriteria c = new M3DaoLogicCriteria(c1, opr, c2);
             criteria.add(c);
             return this;
         }
 
-        public CriteriaBuilder add(String fldNm, BasicCriterionOperator opr, Object val, boolean simple, boolean negate) {
-            LogicCriteria c = new LogicCriteria(fldNm, opr, val, simple, negate);
+        public M3DaoCriteriaBuilder add(String fldNm, BasicCriterionOperator opr, Object val, boolean simple, boolean negate) {
+            M3DaoLogicCriteria c = new M3DaoLogicCriteria(fldNm, opr, val, simple, negate);
             criteria.add(c);
             return this;
         }
     }
 
-    protected void buildWhereClause(CriteriaBuilder builder, StringBuilder sb) {
+    protected void buildWhereClause(M3DaoCriteriaBuilder builder, StringBuilder sb) {
         sb.append("WHERE ");
         final AtomicBoolean notfirst = new AtomicBoolean(false);
         builder.criteria.forEach(lc -> {
-            BasicCriteria bc1;
+            M3DaoBasicCriteria bc1;
             if (notfirst.get())
                 sb.append(" AND ");
             else
@@ -507,7 +507,7 @@ public abstract class AbstractDao {
                 getWhereConditionFor(bc1.fieldName, bc1.op, bc1.value, sb);
                 sb.append(")");
                 sb.append(" OR ");
-                BasicCriteria bc2 = lc.criterion2;
+                M3DaoBasicCriteria bc2 = lc.criterion2;
                 sb.append("(");
                 getWhereConditionFor(bc2.fieldName, bc2.op, bc2.value, sb);
                 sb.append(")");
@@ -524,8 +524,8 @@ public abstract class AbstractDao {
     }
 
     protected void getWhereConditionFor(String fldName, BasicCriterionOperator op, Object value, StringBuilder sb) {
-        FieldMappingSpec spec = _fieldsMap.get(fldName);
-        if (spec.fieldRefersTo == FieldReferenceKind.IdForType || spec.fieldRefersTo == FieldReferenceKind.ForeignTable) {
+        M3DaoFieldMappingSpec spec = _fieldsMap.get(fldName);
+        if (spec.fieldRefersTo == M3DaoFieldReferenceKind.IdForType || spec.fieldRefersTo == M3DaoFieldReferenceKind.ForeignTable) {
             return;
         }
         sb.append(spec.columnName);

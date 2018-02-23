@@ -7,7 +7,7 @@ import m3.guesstimator.internal.data.EstimatorResponse;
 import m3.guesstimator.model.M3ModelException;
 import m3.guesstimator.model.M3ModelFieldsException;
 import m3.guesstimator.model.SolutionArtifact;
-import m3.guesstimator.model.functional.Component;
+import m3.guesstimator.model.functional.M3Component;
 
 public class ComponentCollectionResource extends AbstractCollectionResource {
 
@@ -15,7 +15,7 @@ public class ComponentCollectionResource extends AbstractCollectionResource {
     public EstimatorResponse findAll() {
         EstimatorResponse response = null;
         try {
-            List<SolutionArtifact> results = getDao().find(new Component(), null);
+            List<SolutionArtifact> results = getDao().find(new M3Component(), null);
             response = new EstimatorResponse(results);
         } catch (M3ModelFieldsException mfex) {
             // TODO handle the exception

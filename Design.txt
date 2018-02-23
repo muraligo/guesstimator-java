@@ -108,10 +108,12 @@ NFR build categories:
 Security - provides for security aspects in higher level artifacts
 Maintainability - provides for aspects (e.g. telemetry, error handling, lifecycle management, ...)  in higher level artifacts
 
-Higher level phases:
-Initiation - providing initial analysis at - Application, Subsystem, Service levels
+Intermediate level activities:
 Construction - factors in composition and overheads to the ADBT phases for components, adds higher level NFR builds
-Verification - a higher level phase including Integrated System Functional Test, Performance Test, and Security Test
+Verification - factors in verification including Integrated System Functional Test, Performance Test, and Security Test
+
+Higher level phases:
+Initiation - a higher level phase providing initial analysis at - Application, Subsystem, Service levels
 Deployment - a higher level phase where the application is rolled out to users
 
 Following have: name, description, version, estimate -- abstracted into BasicSolutionArtifact
@@ -120,13 +122,15 @@ Interaction: also has fromS, toS, message, api. S = Subsystem or Service
 Integration: also has fromApplication, toApplication, message, endPoint
 Message: also has type (ACTION, INFO, ERROR, DATA), encoding (POJO, XML, JSON), dataType (factor is depth), subType (each has factor), data
 
-Following additionally have: constituents, composition_factor per ADBT phase, nfr_build per NFR category, verification per Test category
-	abstracted into ContainingSolutionArtifact
-Package: no additional factors 
+Following additionally have: constituents, composition_factor per ADBT phase abstracted into ContainingSolutionArtifact
+Package: also has nfr_build per NFR category, verification per Test category, whether it is independent (parent is Service) or not
 Service: also has overhead per ADBT phase. Constituted only of packages
+    nfr_build per NFR category, verification per Test category are derived
 Subsystem: also has overhead per ADBT phase. Constituted only of packages
+    nfr_build per NFR category, verification per Test category are derived
 Application: also has overhead per ADBT phase, application_type, initiation, deployment.
 	Constituted of subsystems, services, and interactions between them
+    nfr_build per NFR category, verification per Test category are derived
 
 Logic
 
@@ -135,32 +139,45 @@ Take the base value per phase for type.
 Multiply by count.
 Multiply by the complexity.
 Store in phase estimates.
-Add for component estimate.
+Add for construction estimate.
+This is also the component estimate.
 
 Package
 Sum phase estimates of constituents.
 Multiply by composition_factor.
-Add for package estimate.
+Add for base construction estimate.
+Add nfr_build values for construction estimate.
+Add verify values for verification estimate.
+Add construction and verification estimates for package estimate.
 
 Service
 Sum phase estimates of constituents.
 Multiply by composition_factor.
 Add overhead.
-Add for service estimate.
+Add for base construction estimate.
+Sum separately nfr_build values of constituents and then add for construction estimate.
+Sum separately verify values of constituents and then add for verification estimate.
+Add construction and verification estimates for service estimate.
 
 Subsystem
 Sum phase estimates of constituents.
 Multiply by composition_factor.
 Add overhead.
-Add for subsystem estimate.
+Add for base construction estimate.
+Sum separately nfr_build values of constituents and then add for construction estimate.
+Sum separately verify values of constituents and then add for verification estimate.
+Add construction and verification estimates for subsystem estimate.
 
 Application
 Sum phase estimates of constituents.
 Multiply by composition_factor.
 Add overhead.
-Add and then multiply by application_type for construction estimate.
-Add separately qa, performance, security of constituents and multiply each by application_type for corresponding estimates.
-Add higher level phase estimates for application estimate.
+Add for base construction estimate.
+Sum separately nfr_build values of constituents.
+Add together and then with base construction estimate and then multiply by application_type for construction estimate.
+Sum separately verify values of constituents.
+Add and then multiply by application_type for verification estimate.
+Add construction and verification estimates to higher level phase estimates for application estimate.
 
 DAO - 1 per each type
 AbstractDAO
@@ -171,7 +188,13 @@ AbstractDAO
 	getNameOfObject(o): abstract
 	getState: calls above 3 and gets state based on name. if it exists, it sets it to UPDATE, else NEW and add to cache
 	lockForUpdate: calls above 3. if state does not exist in cache add and set to NONE. lock for mod
-	Inner Classes: (CriteriaBuilder, LogicCriteria, BasicCriteria), FieldState, EntityState (by class and name + op {NEW, UPDATE, DELETE, NONE})
+	registerFieldSpec: non-extensible method to register any FieldSpec
+	populateFieldSpecs: for each field in the entity -- abstract
+	performQuery: method to generically Query an entity and its dependencies. Uses a handler
+	buildWhereClause, getWhereConditionFor: support functions for Query
+	build Basic and Extended ColumnList: support functions for Create and Query
+	Inner Classes: (CriteriaBuilder, LogicCriteria, BasicCriteria, Handler Param, HandlerResult), 
+					FieldState, EntityState (by class and name + op {NEW, UPDATE, DELETE, NONE})
 
 --------------------------------------------------------------------
 Basic Info

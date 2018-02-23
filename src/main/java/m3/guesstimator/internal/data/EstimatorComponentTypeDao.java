@@ -16,18 +16,18 @@ import m3.guesstimator.model.M3ModelException;
 import m3.guesstimator.model.M3ModelFieldsException;
 import m3.guesstimator.model.M3ModelFieldsException.M3FieldException;
 import m3.guesstimator.model.reference.ComponentContext;
-import m3.guesstimator.model.reference.ComponentType;
+import m3.guesstimator.model.reference.M3ComponentType;
 import m3.guesstimator.model.reference.Layer;
 
 public class EstimatorComponentTypeDao extends AbstractDao {
-    private static final Class<?> ARTIFACT_TYPE = ComponentType.class;
+    private static final Class<?> ARTIFACT_TYPE = M3ComponentType.class;
     static final String _TABLE_NAME = "COMPONENT_TYPE";
     static final String _CONTEXT_COLUMN = "CONTEXT";
     static final String _LAYER_COLUMN = "LAYER";
     static final String _COST_COLUMN = "COSTS";
 
     public EstimatorComponentTypeDao() {
-        super(DaoContext.COMPONENT_TYPE);
+        super(M3DaoContext.COMPONENT_TYPE);
         populateFieldSpecs();
     }
 
@@ -45,13 +45,13 @@ public class EstimatorComponentTypeDao extends AbstractDao {
 
     @Override
     protected String getNameOfObject(Object o) {
-        ComponentType ct = (ComponentType)o;
+        M3ComponentType ct = (M3ComponentType)o;
         return ct.getName();
     }
 
-    public ComponentType put(ComponentType ct) {
-        EntityState es = getState(ct);
-        ComponentType resVal = null;
+    public M3ComponentType put(M3ComponentType ct) {
+        M3DaoEntityState es = getState(ct);
+        M3ComponentType resVal = null;
         if (es.isNew()) {
             resVal = addNew(ct);
         } else {
@@ -61,11 +61,11 @@ public class EstimatorComponentTypeDao extends AbstractDao {
         return resVal;
     }
 
-	public ComponentType get(String name) {
+	public M3ComponentType get(String name) {
         return null; // TODO Implement
     }
 
-    public List<ComponentType> find(CriteriaBuilder cb) {
+    public List<M3ComponentType> find(M3DaoCriteriaBuilder cb) {
         StringBuilder colsb = new StringBuilder();
         buildBasicColumnList(colsb);
         StringBuilder sqlsb = new StringBuilder("SELECT ");
@@ -76,17 +76,17 @@ public class EstimatorComponentTypeDao extends AbstractDao {
 	        sqlsb.append(" ");
 	    	buildWhereClause(cb, sqlsb);
 	    }
-        List<ComponentType> results = new ArrayList<ComponentType>();
+        List<M3ComponentType> results = new ArrayList<M3ComponentType>();
         Function<M3DaoHandlerParam, M3ComponentTypeHandlerResult> qfunc = (param) ->
         {
-            M3ModelFieldsException mfex = new M3ModelFieldsException(ComponentType.class.getSimpleName(), "collecting SQL SELECT exceptions");
+            M3ModelFieldsException mfex = new M3ModelFieldsException(M3ComponentType.class.getSimpleName(), "collecting SQL SELECT exceptions");
 	        M3ComponentTypeHandlerResult result = new M3ComponentTypeHandlerResult(mfex);
             try {
     		    if (param.rs.first()) {
     		        ResultSetMetaData rsmd = param.rs.getMetaData();
     		        int colCnt = rsmd.getColumnCount();
     		        List<M3DaoFieldState> fieldsState = new ArrayList<M3DaoFieldState>();
-    		        ComponentType ct1 = retrieveValues(param.rs, rsmd, colCnt, fieldsState, mfex);
+    		        M3ComponentType ct1 = retrieveValues(param.rs, rsmd, colCnt, fieldsState, mfex);
     		        result.add(fieldsState);
     		        result.add(ct1);
     		        while (param.rs.next()) {
@@ -107,7 +107,7 @@ public class EstimatorComponentTypeDao extends AbstractDao {
     }
 
     public void removeAll() {
-        String forModel = ComponentType.class.getSimpleName();
+        String forModel = M3ComponentType.class.getSimpleName();
         StringBuilder sqlsb = new StringBuilder("SELECT FROM ");
 	    sqlsb.append(_TABLE_NAME);
         String del_sql = sqlsb.toString();
@@ -137,9 +137,9 @@ public class EstimatorComponentTypeDao extends AbstractDao {
 		}
     }
 
-	private ComponentType addNew(ComponentType ct) {
+	private M3ComponentType addNew(M3ComponentType ct) {
         String ctname = ct.getName();
-        String forModel = ComponentType.class.getSimpleName();
+        String forModel = M3ComponentType.class.getSimpleName();
         StringBuilder valuesb = new StringBuilder();
         StringBuilder colsb = new StringBuilder();
         buildBasicColumnList(colsb);
@@ -183,7 +183,7 @@ public class EstimatorComponentTypeDao extends AbstractDao {
         return ct;
     }
 
-    private ComponentType update(ComponentType ct) {
+    private M3ComponentType update(M3ComponentType ct) {
 	    // TODO Auto-generated method stub
 	    return ct;
     }
@@ -191,8 +191,8 @@ public class EstimatorComponentTypeDao extends AbstractDao {
     @Override
     protected void populateFieldSpecs() {
         registerBaseFieldSpecs();
-        registerFieldSpec("context", _CONTEXT_COLUMN, ComponentContext.class, FieldReferenceKind.EnumType, null, null, null);
-        registerFieldSpec("architecturalLayer", _LAYER_COLUMN, Layer.class, FieldReferenceKind.EnumType, null, null, null);
+        registerFieldSpec("context", _CONTEXT_COLUMN, ComponentContext.class, M3DaoFieldReferenceKind.EnumType, null, null, null);
+        registerFieldSpec("architecturalLayer", _LAYER_COLUMN, Layer.class, M3DaoFieldReferenceKind.EnumType, null, null, null);
         registerFieldSpec("strConstructCosts", _COST_COLUMN, String.class, null, null, null, null);
     }
 
@@ -211,7 +211,7 @@ public class EstimatorComponentTypeDao extends AbstractDao {
         throw new UnsupportedOperationException("EstimatorComponentTypeDao.buildExtendedColumnList");
     }
 
-    private void checkAndRefresh(Connection conn, ComponentType ct, String col_names, M3ModelFieldsException modelException) {
+    private void checkAndRefresh(Connection conn, M3ComponentType ct, String col_names, M3ModelFieldsException modelException) {
         StringBuilder sqlsb = new StringBuilder("SELECT ");
 	    sqlsb.append(col_names);
 	    sqlsb.append(" FROM ");
@@ -294,9 +294,9 @@ public class EstimatorComponentTypeDao extends AbstractDao {
         }
     }
 
-    private ComponentType retrieveValues(ResultSet rs, ResultSetMetaData rsmd, int colCnt,
+    private M3ComponentType retrieveValues(ResultSet rs, ResultSetMetaData rsmd, int colCnt,
                 List<M3DaoFieldState> fieldsState, M3ModelFieldsException mfex) {
-        ComponentType ct = new ComponentType();
+        M3ComponentType ct = new M3ComponentType();
         for (int colIx = 0; colIx < colCnt; colIx++) {
             M3DaoFieldState state = null;
             String columnName = getColumnName(rsmd, colIx, mfex);
@@ -340,7 +340,7 @@ public class EstimatorComponentTypeDao extends AbstractDao {
 
     private class M3ComponentTypeHandlerResult {
         final Set<List<M3DaoFieldState>> fieldsStates = Collections.synchronizedSet(new ConcurrentSkipListSet<List<M3DaoFieldState>>());
-        final Set<ComponentType> artifacts = Collections.synchronizedSet(new ConcurrentSkipListSet<ComponentType>());
+        final Set<M3ComponentType> artifacts = Collections.synchronizedSet(new ConcurrentSkipListSet<M3ComponentType>());
         final M3ModelFieldsException mfex;
 
         M3ComponentTypeHandlerResult(M3ModelFieldsException mfe) {
@@ -351,18 +351,18 @@ public class EstimatorComponentTypeDao extends AbstractDao {
             fieldsStates.add(fs);
         }
 
-        void add(ComponentType sa) {
+        void add(M3ComponentType sa) {
             artifacts.add(sa);
         }
     }
 
-    private void performQuery(String sqlstr, List<ComponentType> results, 
+    private void performQuery(String sqlstr, List<M3ComponentType> results, 
                 Function<M3DaoHandlerParam, M3ComponentTypeHandlerResult> handler) {
         Connection conn = null;
         Statement stmt = null;
         ResultSet rs = null;
         try {
-            conn = getConnection(ComponentType.class.getSimpleName());
+            conn = getConnection(M3ComponentType.class.getSimpleName());
             stmt = conn.createStatement();
 		    rs = stmt.executeQuery(sqlstr);
 		    M3DaoHandlerParam param = new M3DaoHandlerParam(rs);
@@ -373,7 +373,7 @@ public class EstimatorComponentTypeDao extends AbstractDao {
 		    }
             result.artifacts.forEach(sa1 -> results.add(sa1));
         } catch (SQLException ex) {
-            throw new M3ModelException("querying [" + sqlstr + "]", ComponentType.class.getSimpleName());
+            throw new M3ModelException("querying [" + sqlstr + "]", M3ComponentType.class.getSimpleName());
         } finally {
             try {
                 if (rs != null && !rs.isClosed())

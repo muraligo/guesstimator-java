@@ -13,8 +13,8 @@ import m3.guesstimator.internal.data.AbstractDao;
 import m3.guesstimator.internal.data.EstimatorComponentDao;
 import m3.guesstimator.internal.data.EstimatorComponentTypeDao;
 import m3.guesstimator.internal.data.EstimatorResponse;
-import m3.guesstimator.model.functional.Component;
-import m3.guesstimator.model.reference.ComponentType;
+import m3.guesstimator.model.functional.M3Component;
+import m3.guesstimator.model.reference.M3ComponentType;
 import m3.guesstimator.service.ApplicationContext;
 import spark.Route;
 
@@ -25,8 +25,8 @@ public class GuesstimatorApplication {
             new ConcurrentHashMap<String, Class<?>>(40));
     static final Map<String, AbstractDao> _daoMap = Collections.synchronizedMap(
             new ConcurrentHashMap<String, AbstractDao>(40));
-    static final Map<String, Map<String, Map<String, ComponentType>>> _componentTypeCache = Collections.synchronizedMap(
-            new ConcurrentHashMap<String, Map<String, Map<String, ComponentType>>>(20));
+    static final Map<String, Map<String, Map<String, M3ComponentType>>> _componentTypeCache = Collections.synchronizedMap(
+            new ConcurrentHashMap<String, Map<String, Map<String, M3ComponentType>>>(20));
 
     public GuesstimatorApplication(ApplicationContext ctx) {
         super();
@@ -48,7 +48,7 @@ public class GuesstimatorApplication {
         // ******** verbs for component resource **********
         post("/new/component", (req, res) -> {
             Gson gson = new Gson();
-            Component ent = gson.fromJson(req.body(), Component.class);
+            M3Component ent = gson.fromJson(req.body(), M3Component.class);
             EstimatorComponentDao dao = (EstimatorComponentDao) _daoMap.get("component");
             ComponentResource resource = new ComponentResource();
             resource.dao = dao;

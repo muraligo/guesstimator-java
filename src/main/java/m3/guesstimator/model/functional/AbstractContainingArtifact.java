@@ -8,6 +8,8 @@ import m3.guesstimator.model.ContainingSolutionArtifact;
 import m3.guesstimator.model.ParseablePrimaryCollection;
 import m3.guesstimator.model.SolutionArtifact;
 import m3.guesstimator.model.reference.ConstructionPhase;
+import m3.guesstimator.model.reference.NfrCategory;
+import m3.guesstimator.model.reference.VerifyCategory;
 
 public abstract class AbstractContainingArtifact extends AbstractSolutionArtifact
 		implements ContainingSolutionArtifact {
@@ -20,11 +22,10 @@ public abstract class AbstractContainingArtifact extends AbstractSolutionArtifac
     protected String strCompositionFactors;
     protected String strConstructionOverheads;
     // fields below are non-persistent
+    transient protected Long[] nfrBuildEstimates;
+    transient protected Long[] verificationEstimates;
     transient protected Long[] constructionEstimates;
     transient protected boolean constructEstimateComputed = false;
-    transient protected boolean functionEstimateComputed = false;
-    transient protected boolean perfEstimateComputed = false;
-    transient protected boolean secEstimateComputed = false;
     transient protected boolean verifyEstimateComputed = false;
     transient protected ParseablePrimaryCollection<ConstructionPhase, Long> constructionOverheads;
     transient protected ParseablePrimaryCollection<ConstructionPhase, Long> compositionFactors;
@@ -33,56 +34,12 @@ public abstract class AbstractContainingArtifact extends AbstractSolutionArtifac
     public AbstractContainingArtifact() {
         constructionEstimates = new Long[ConstructionPhase.values().length];
         Arrays.fill(constructionEstimates, 0L);
+        nfrBuildEstimates = new Long[NfrCategory.values().length];
+        Arrays.fill(nfrBuildEstimates, 0L);
+        verificationEstimates = new Long[VerifyCategory.values().length];
+        Arrays.fill(verificationEstimates, 0L);
         compositionFactors = new ParseablePrimaryCollection<ConstructionPhase, Long>(getClass().getSimpleName(), 
                 "CompositionFactors", ConstructionPhase.class, Long.class, 0L);
-    }
-
-    @Override
-    public Long getFunctionalEstimate() {
-        if (! functionEstimateComputed) {
-            computeFunctionalEstimate();
-        }
-        return functionalEstimate;
-    }
-    @Override
-    public void setFunctionalEstimate(Long value) {
-        functionalEstimate = value;
-        if (areOtherEstimatesComputed()) {
-            functionEstimateComputed = false;
-            verifyEstimateComputed = false;
-        }
-    }
-
-    @Override
-    public Long getPerformanceEstimate() {
-        if (! perfEstimateComputed) {
-            computePerformanceEstimate();
-        }
-        return performanceEstimate;
-    }
-    @Override
-    public void setPerformanceEstimate(Long value) {
-        performanceEstimate = value;
-        if (areOtherEstimatesComputed()) {
-            perfEstimateComputed = false;
-            verifyEstimateComputed = false;
-        }
-    }
-
-    @Override
-    public Long getSecurityEstimate() {
-        if (! secEstimateComputed) {
-            computeSecurityEstimate();
-        }
-        return securityEstimate;
-    }
-    @Override
-    public void setSecurityEstimate(Long value) {
-        securityEstimate = value;
-        if (areOtherEstimatesComputed()) {
-            secEstimateComputed = false;
-            verifyEstimateComputed = false;
-        }
     }
 
     public String getStrCompositionFactors() {
@@ -130,6 +87,24 @@ public abstract class AbstractContainingArtifact extends AbstractSolutionArtifac
     }
 
     @Override
+    public Long getConstructNfrEstimate(NfrCategory cat) {
+        if (! constructEstimateComputed) {
+            computeConstructEstimate();
+            constructEstimateComputed = true;
+        }
+        return nfrBuildEstimates[cat.ordinal()];
+    }
+
+    @Override
+    public Long getVerifyEstimate(VerifyCategory cat) {
+        if (! verifyEstimateComputed) {
+            computeVerifyEstimate();
+            verifyEstimateComputed = true;
+        }
+        return verificationEstimates[cat.ordinal()];
+    }
+
+    @Override
     public Long getEstimate() {
         if (! constructEstimateComputed) {
             computeConstructEstimate();
@@ -139,32 +114,32 @@ public abstract class AbstractContainingArtifact extends AbstractSolutionArtifac
         for (ConstructionPhase p : ConstructionPhase.values()) {
             constructEstimate += constructionEstimates[p.ordinal()];
         }
+        for (NfrCategory p : NfrCategory.values()) {
+            constructEstimate += nfrBuildEstimates[p.ordinal()];
+        }
         return constructEstimate + getVerificationEstimate();
     }
 
     public Long getVerificationEstimate() {
-        return getFunctionalEstimate() + getPerformanceEstimate() + getSecurityEstimate();
-    }
-
-    /**
-     * Whether estimates for Verification - Functional, Security, and Performance 
-     * are derived or specified.
-     * Default is that these values are specified.
-     * Must override if derived.
-     * @return
-     */
-    protected boolean areOtherEstimatesComputed() {
-        return false;
+        if (! verifyEstimateComputed) {
+            computeVerifyEstimate();
+            verifyEstimateComputed = true;
+        }
+        Long verifyEstimate = 0L;
+        for (VerifyCategory p : VerifyCategory.values()) {
+        	verifyEstimate += verificationEstimates[p.ordinal()];
+        }
+        return verifyEstimate;
     }
 
     /**
      * Whether Construction Overheads need to be considered for this Container.
-     * Default is that no Construction Overheads need to be considered.
-     * Must override if Construction Overheads need to be considered.
+     * Default is that Construction Overheads need to be considered.
+     * Must override if Construction Overheads must not to be considered.
      * @return
      */
     protected boolean hasConstructOverheads() {
-        return false;
+        return true;
 	}
 
     protected void computeConstructEstimate() {
@@ -181,56 +156,10 @@ public abstract class AbstractContainingArtifact extends AbstractSolutionArtifac
                 constructionEstimates[ip] += constructionOverheads.get(ip);
             }
         }
+        computeNfrBuildEstimate();
     }
 
-    protected void computeFunctionalEstimate() {
-        if (areOtherEstimatesComputed() && constituents != null & ! constituents.isEmpty()) {
-            SolutionArtifact sa = constituents.get(0);
-            if (sa instanceof ContainingSolutionArtifact) {
-                functionalEstimate = 0L;
-                constituents.forEach(sa2 -> {
-                    ContainingSolutionArtifact csa = (ContainingSolutionArtifact)sa2;
-                    functionalEstimate += csa.getFunctionalEstimate();
-                });
-                functionEstimateComputed = true;
-                if (secEstimateComputed && perfEstimateComputed) {
-                    verifyEstimateComputed = true;
-                }
-            }
-        }
-    }
+    abstract protected void computeNfrBuildEstimate();
 
-    protected void computeSecurityEstimate() {
-        if (areOtherEstimatesComputed() && constituents != null & ! constituents.isEmpty()) {
-            SolutionArtifact sa = constituents.get(0);
-            if (sa instanceof ContainingSolutionArtifact) {
-            	securityEstimate = 0L;
-                constituents.forEach(sa2 -> {
-                    ContainingSolutionArtifact csa = (ContainingSolutionArtifact)sa2;
-                    securityEstimate += csa.getSecurityEstimate();
-                });
-            }
-            secEstimateComputed = false;
-            if (functionEstimateComputed && perfEstimateComputed) {
-                verifyEstimateComputed = true;
-            }
-        }
-    }
-
-    protected void computePerformanceEstimate() {
-        if (areOtherEstimatesComputed() && constituents != null & ! constituents.isEmpty()) {
-            SolutionArtifact sa = constituents.get(0);
-            if (sa instanceof ContainingSolutionArtifact) {
-            	performanceEstimate = 0L;
-                constituents.forEach(sa2 -> {
-                    ContainingSolutionArtifact csa = (ContainingSolutionArtifact)sa2;
-                    performanceEstimate += csa.getPerformanceEstimate();
-                });
-                perfEstimateComputed = true;
-                if (functionEstimateComputed && secEstimateComputed) {
-                    verifyEstimateComputed = true;
-                }
-            }
-        }
-    }
+    abstract protected void computeVerifyEstimate();
 }

@@ -3,7 +3,7 @@ package m3.guesstimator.internal;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import m3.guesstimator.model.reference.ComponentType;
+import m3.guesstimator.model.reference.M3ComponentType;
 
 public class ComponentTypeCollectionResource {
     public String findAll() {
@@ -35,7 +35,7 @@ public class ComponentTypeCollectionResource {
                     } else {
                         sb.append(", ");
                     }
-                    ComponentType ct = ctent.getValue();
+                    M3ComponentType ct = ctent.getValue();
                     sb.append("{ \"component_type_name\": ");
                     sb.append(ct.getName());
                     sb.append(", \"description\": ");

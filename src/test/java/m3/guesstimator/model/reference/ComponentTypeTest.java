@@ -26,13 +26,13 @@ public class ComponentTypeTest {
 			"[ {\"phase\": \"Analysis\", \"value\": \"5\"}, {\"phase\": \"Design\", \"value\": \"10\"}, "
 					+ " {\"phase\": \"Build\", \"value\": \"10\"}, {\"phase\": \"Test\", \"value\": \"5\"} ]";
 
-    private ComponentType target = null;
+    private M3ComponentType target = null;
     private LocalDateTime currTime = null;
 
     @Before
     public void setUp() throws Exception {
         currTime = LocalDateTime.now();
-        target = new ComponentType(currTime);
+        target = new M3ComponentType(currTime);
     }
 
 	@After

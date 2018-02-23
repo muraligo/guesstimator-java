@@ -1,6 +1,6 @@
 package m3.guesstimator.internal.data;
 
-enum FieldReferenceKind {
+enum M3DaoFieldReferenceKind {
     IdForType, 
     EnumType, 
     ForeignTable
