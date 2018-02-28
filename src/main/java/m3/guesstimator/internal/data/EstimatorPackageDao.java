@@ -6,19 +6,27 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 import m3.guesstimator.model.ContainingSolutionArtifact;
 import m3.guesstimator.model.M3ModelFieldsException;
 import m3.guesstimator.model.SolutionArtifact;
+import m3.guesstimator.model.functional.M3Component;
 import m3.guesstimator.model.functional.M3Package;
+import m3.guesstimator.model.reference.Complexity;
+import m3.guesstimator.model.reference.Language;
+import m3.guesstimator.model.reference.Layer;
 
 public class EstimatorPackageDao extends AbstractDao {
     private static final Class<?> ARTIFACT_TYPE = ContainingSolutionArtifact.class;
     private static final String _TABLE_NAME = "PACKAGE";
     private static final String _OVERHEAD_COLUMN = "OVERHEAD";
     private static final String _COMPOSITION_COLUMN = "COMPOSITION";
+
+    private EstimatorComponentDao _componentDao;
 
     public EstimatorPackageDao() {
         super();
@@ -157,7 +165,6 @@ public class EstimatorPackageDao extends AbstractDao {
         valuesb.append("'" + saname + "'");
         valuesb.append(", '" + pkg.getDescription() + "'");
         valuesb.append(", '" + pkg.getVersion() + "'");
-        valuesb.append(", '" + pkg.getStrConstructionOverheads() + "'");
         valuesb.append(", '" + pkg.getStrCompositionFactors() + "'");
         String col_names = colsb.toString();
         StringBuilder sqlsb = new StringBuilder("INSERT INTO " + _TABLE_NAME + " (");
@@ -222,21 +229,40 @@ public class EstimatorPackageDao extends AbstractDao {
 	        };
 	        performQuery(pkg, sqlsb.toString(), results, qfunc);
 		}
-		// TODO For each of the children retrieve the child, compare field values and if different add to list for updates and if new add to list for adds
+        List<M3Component> addlist = new ArrayList<M3Component>();
+        List<M3Component> updlist = new ArrayList<M3Component>();
+        Map<String, M3Component> updmap = new HashMap<String, M3Component>();
+        int constIx = 0;
+        pkg.getConstituents().forEach(sa1 -> {
+            String fldnm = "constituents[" + Integer.toString(constIx) + "#" + sa1.getName() + "]";
+            if (sa1 instanceof M3Component) {
+                M3Component ct1 = null;
+                try {
+                    ct1 = _componentDao.get(sa1.getName());
+                    if (ct1 == null) { // does not exist
+                        addlist.add((M3Component)sa1);
+                    } else {
+                        updlist.add((M3Component)sa1);
+                        updmap.put(sa1.getName(), ct1);
+                    }
+                } catch (M3ModelFieldsException mfex2) {
+                    // TODO handle exception; it does not mean it doesn't exist
+                }
+            } else {
+                mfex.addException(fldnm, "constituent must be a Component");
+            }
+        });
+        compareValues(updlist, updmap, mfex);
 		// TODO For the adds use child dao to insert each
-		// TODO For the updates use child dao to update each
+		// TODO For the updates (in update map) use child dao to update each
         // TODO Check and do something with mfex
         return pkg;
     }
     /*
     _TABLE_NAME
-    _OVERHEAD_COLUMN
     _COMPOSITION_COLUMN
-    "strConstructionOverheads"
     "strCompositionFactors"
-    getStrConstructionOverheads
     getStrCompositionFactors
-    setStrConstructionOverheads
     setStrCompositionFactors
      */
 
@@ -248,7 +274,6 @@ public class EstimatorPackageDao extends AbstractDao {
     @Override
     protected void populateFieldSpecs() {
         registerBaseFieldSpecs();
-        registerFieldSpec("strConstructionOverheads", _OVERHEAD_COLUMN, String.class, null, null, null, null);
         registerFieldSpec("strCompositionFactors", _COMPOSITION_COLUMN, String.class, null, null, null, null);
     }
 
@@ -257,13 +282,16 @@ public class EstimatorPackageDao extends AbstractDao {
         colsb.append(_NAME_COLUMN);
         colsb.append(", " + _DESC_COLUMN);
         colsb.append(", " + _VERSION_COLUMN);
-        colsb.append(", " + _OVERHEAD_COLUMN);
         colsb.append(", " + _COMPOSITION_COLUMN);
     }
 
     @Override
     protected void buildExtendedColumnList(StringBuilder colsb) {
         buildBasicColumnList(colsb);
+    }
+
+    void setComponentDao(EstimatorComponentDao dao) {
+        _componentDao = dao;
     }
 
     private void checkAndRefresh(ResultSet rs, M3Package pkg, String colName, List<M3DaoFieldState> fieldsState, M3ModelFieldsException modelException) {
@@ -277,11 +305,6 @@ public class EstimatorPackageDao extends AbstractDao {
             state = isSameStringValue(rs, "version", colName, pkg.getVersion(), modelException);
             if (state != null && !state.same && state.newValue != null) {
             	pkg.setVersion((String) state.newValue);
-            }
-        } else if (_OVERHEAD_COLUMN.equals(colName)) {
-            state = isSameStringValue(rs, "strConstructionOverheads", colName, pkg.getStrConstructionOverheads(), modelException);
-            if (state != null && !state.same && state.newValue != null) {
-            	pkg.setStrConstructionOverheads((String) state.newValue);
             }
         } else if (_COMPOSITION_COLUMN.equals(colName)) {
             state = isSameStringValue(rs, "strCompositionFactors", colName, pkg.getStrCompositionFactors(), modelException);
@@ -314,11 +337,6 @@ public class EstimatorPackageDao extends AbstractDao {
             if (state != null && !state.same && state.newValue != null) {
             	pkg.setVersion((String) state.newValue);
             }
-        } else if (_OVERHEAD_COLUMN.equals(colName)) {
-            state = retrieveStringValue(rs, "strConstructionOverheads", colName, mfex);
-            if (state != null && !state.same && state.newValue != null) {
-            	pkg.setStrConstructionOverheads((String) state.newValue);
-            }
         } else if (_COMPOSITION_COLUMN.equals(colName)) {
             state = retrieveStringValue(rs, "strCompositionFactors", colName, mfex);
             if (state != null && !state.same && state.newValue != null) {
@@ -332,5 +350,42 @@ public class EstimatorPackageDao extends AbstractDao {
                 fieldsState.add(state);
         }
 	}
+
+    private void compareValues(List<M3Component> updlist, Map<String, M3Component> updmap, M3ModelFieldsException modelException) {
+        // For each of the children in the update list, compare field values and if same drop from update map
+        updlist.forEach(ct2 -> {
+            M3Component ct3 = updmap.get(ct2.getName());
+            M3DaoFieldState state = isSameStringValue("description", ct2.getDescription(), ct3.getDescription(), modelException);
+            if (state != null && state.same) {
+            	// TODO remove from map
+            	continue;
+            }
+            state = isSameStringValue("complexity", ct2.getComplexity().name(), ct3.getComplexity().name(), modelException);
+            if (state != null && state.same) {
+            	// TODO remove from map
+            	continue;
+            }
+            state = isSameStringValue("layer", ct2.getLayer().name(), ct3.getLayer().name(), modelException);
+            if (state != null && state.same) {
+            	// TODO remove from map
+            	continue;
+            }
+            state = isSameStringValue("language", ct2.getLanguage().name(), ct3.getLanguage().name(), modelException);
+            if (state != null && state.same) {
+            	// TODO remove from map
+            	continue;
+            }
+            state = isSameLongValue("count", ct2.getCount(), ct3.getCount(), modelException);
+            if (state != null && state.same) {
+            	// TODO remove from map
+            	continue;
+            }
+            state = isSameStringValue("type", ct2.getType().getName(), ct3.getType().getName(), modelException);
+            if (state != null && state.same) {
+            	// TODO remove from map
+            	continue;
+            }
+        });
+    }
 
 }

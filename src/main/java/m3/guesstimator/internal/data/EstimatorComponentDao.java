@@ -13,7 +13,6 @@ import m3.guesstimator.model.ContainingSolutionArtifact;
 import m3.guesstimator.model.M3ModelFieldsException;
 import m3.guesstimator.model.SolutionArtifact;
 import m3.guesstimator.model.M3ModelFieldsException.M3FieldException;
-import m3.guesstimator.model.functional.AbstractSolutionArtifact;
 import m3.guesstimator.model.functional.M3Component;
 import m3.guesstimator.model.reference.Complexity;
 import m3.guesstimator.model.reference.ComponentContext;
@@ -54,55 +53,46 @@ public class EstimatorComponentDao extends AbstractDao {
         return sa.getName();
     }
 
-    public SolutionArtifact put(SolutionArtifact sa) {
-        M3DaoEntityState es = getState(sa);
-        SolutionArtifact resVal = null;
-        if (es.isNew()) {
-            resVal = addNew(sa);
-        } else {
-            resVal = update(sa);
-        }
-        es.unlockAndReset();
-        return resVal;
-    }
-
-	public SolutionArtifact get(SolutionArtifact dummy, String name) {
-        AbstractSolutionArtifact adum = (AbstractSolutionArtifact)dummy;
+	public M3Component get(String name) {
         StringBuilder colsb = new StringBuilder();
         buildExtendedColumnList(colsb);
         StringBuilder sqlsb = new StringBuilder("SELECT ");
         sqlsb.append(colsb.toString());
         sqlsb.append(" FROM ");
-	    sqlsb.append(_TABLE_NAME + " cp ");
+	    sqlsb.append(_TABLE_NAME + " cp, ");
 	    sqlsb.append(EstimatorComponentTypeDao._TABLE_NAME + " ct");
 	    sqlsb.append(" WHERE cp.NAME = ");
         sqlsb.append(name);
         sqlsb.append(" AND cp." + _TYPE_COLUMN + " = ct." + _NAME_COLUMN);
-        List<SolutionArtifact> results = new ArrayList<SolutionArtifact>();
+        List<SolutionArtifact> perfqres = new ArrayList<SolutionArtifact>();
         Function<M3DaoHandlerParam, M3DaoHandlerResult> qfunc = (param) ->
         {
-            M3ModelFieldsException mfex = new M3ModelFieldsException(dummy.getClass().getSimpleName(), "collecting SQL SELECT exceptions");
+            M3ModelFieldsException mfex = new M3ModelFieldsException(M3Component.class.getSimpleName(), "collecting SQL SELECT exceptions");
 	        M3DaoHandlerResult result = new M3DaoHandlerResult(mfex);
             try {
-    		    if (param.rs.first()) {
-    		        ResultSetMetaData rsmd = param.rs.getMetaData();
-    		        List<M3DaoFieldState> fieldsState = new ArrayList<M3DaoFieldState>();
-    		        M3Component sa1 = retrieveValues(param.rs, rsmd, fieldsState, mfex);
-    		        // TODO Do something with fieldsState
-    		        result.add(fieldsState);
-    		        result.add(sa1);
-    		    }
+                if (param.rs.first()) {
+                    ResultSetMetaData rsmd = param.rs.getMetaData();
+                    int colCnt = rsmd.getColumnCount();
+                    List<M3DaoFieldState> fieldsState = new ArrayList<M3DaoFieldState>();
+                    M3Component cmp = new M3Component();
+                    for (int colIx = 0; colIx < colCnt; colIx++) {
+                        retrieveValues(param.rs, cmp, rsmd.getColumnLabel(colIx), fieldsState, mfex);
+                    }
+                    // TODO Do something with fieldsState
+                    result.add(fieldsState);
+                    result.add(cmp);
+                }
             } catch (SQLException ex) {
                 mfex.addException(null, "accessing SQL ResultSet or ResultSetMetaData");
             }
 			return result;
         };
-        performQuery(adum, sqlsb.toString(), results, qfunc);
-        return results.get(0);
+        performQuery(new M3Component(), sqlsb.toString(), perfqres, qfunc);
+        // TODO Handle Exception
+        return (M3Component)perfqres.get(0);
     }
 
-    public List<SolutionArtifact> find(SolutionArtifact dummy, M3DaoCriteriaBuilder cb) {
-        AbstractSolutionArtifact adum = (AbstractSolutionArtifact)dummy;
+    public List<M3Component> find(M3DaoCriteriaBuilder cb) {
         StringBuilder colsb = new StringBuilder();
         buildExtendedColumnList(colsb);
         StringBuilder sqlsb = new StringBuilder("SELECT ");
@@ -117,25 +107,32 @@ public class EstimatorComponentDao extends AbstractDao {
 	    } else {
 	        sqlsb.append(" WHERE cp." + _TYPE_COLUMN + " = ct." + _NAME_COLUMN);
 	    }
-        List<SolutionArtifact> results = new ArrayList<SolutionArtifact>();
+        List<SolutionArtifact> perfqres = new ArrayList<SolutionArtifact>();
         Function<M3DaoHandlerParam, M3DaoHandlerResult> qfunc = (param) ->
         {
-            M3ModelFieldsException mfex = new M3ModelFieldsException(dummy.getClass().getSimpleName(), "collecting SQL SELECT exceptions");
+            M3ModelFieldsException mfex = new M3ModelFieldsException(M3Component.class.getSimpleName(), "collecting SQL SELECT exceptions");
 	        M3DaoHandlerResult result = new M3DaoHandlerResult(mfex);
             try {
-    		    if (param.rs.first()) {
-    		        ResultSetMetaData rsmd = param.rs.getMetaData();
-    		        List<M3DaoFieldState> fieldsState = new ArrayList<M3DaoFieldState>();
-    		        M3Component sa1 = retrieveValues(param.rs, rsmd, fieldsState, mfex);
-    		        // TODO Do something with fieldsState
-    		        result.add(fieldsState);
-    		        result.add(sa1);
-    		        while (param.rs.next()) {
-        		        fieldsState = new ArrayList<M3DaoFieldState>();
-        		        sa1 = retrieveValues(param.rs, rsmd, fieldsState, mfex);
-        		        // TODO Do something with fieldsState
-        		        result.add(fieldsState);
-        		        result.add(sa1);
+                if (param.rs.first()) {
+                    ResultSetMetaData rsmd = param.rs.getMetaData();
+                    int colCnt = rsmd.getColumnCount();
+                    List<M3DaoFieldState> fieldsState = new ArrayList<M3DaoFieldState>();
+                    M3Component cmp = new M3Component();
+                    for (int colIx = 0; colIx < colCnt; colIx++) {
+                        retrieveValues(param.rs, cmp, rsmd.getColumnLabel(colIx), fieldsState, mfex);
+                    }
+                    // TODO Do something with fieldsState
+                    result.add(fieldsState);
+                    result.add(cmp);
+                    while (param.rs.next()) {
+                        fieldsState = new ArrayList<M3DaoFieldState>();
+                        cmp = new M3Component();
+                        for (int colIx = 0; colIx < colCnt; colIx++) {
+                            retrieveValues(param.rs, cmp, rsmd.getColumnLabel(colIx), fieldsState, mfex);
+                        }
+                        // TODO Do something with fieldsState
+                        result.add(fieldsState);
+                        result.add(cmp);
     		        }
     		    }
             } catch (SQLException ex) {
@@ -143,19 +140,34 @@ public class EstimatorComponentDao extends AbstractDao {
             }
 			return result;
         };
-        performQuery(adum, sqlsb.toString(), results, qfunc);
+        performQuery(new M3Component(), sqlsb.toString(), perfqres, qfunc);
+        // TODO Handle Exception
+        List<M3Component> results = new ArrayList<M3Component>();
+        perfqres.forEach(sa1 -> results.add((M3Component)sa1));
         return results;
     }
 
-    protected SolutionArtifact addNew(SolutionArtifact sa) {
-        String saname = sa.getName();
-        M3Component ct = (M3Component) sa;
+    public M3Component put(M3Component sa) {
+        M3DaoEntityState es = getState(sa);
+        M3Component resVal = null;
+        if (es.isNew()) {
+            resVal = addNew(sa);
+        } else {
+            resVal = update(sa);
+        }
+        es.unlockAndReset();
+        return resVal;
+    }
+
+    // TODO Lock before executing update and verifying
+    protected M3Component addNew(M3Component ct) {
+        String saname = ct.getName();
         StringBuilder valuesb = new StringBuilder();
         StringBuilder colsb = new StringBuilder();
         buildBasicColumnList(colsb);
         valuesb.append("'" + saname + "'");
-        valuesb.append(", '" + sa.getDescription() + "'");
-        valuesb.append(", '" + sa.getVersion() + "'");
+        valuesb.append(", '" + ct.getDescription() + "'");
+        valuesb.append(", '" + ct.getVersion() + "'");
         valuesb.append(", '" + ct.getComplexity() + "'");
         valuesb.append(", '" + ct.getLayer() + "'");
         valuesb.append(", '" + ct.getLanguage() + "'");
@@ -193,16 +205,13 @@ public class EstimatorComponentDao extends AbstractDao {
         }
 		if (res_count > 0) { // row was inserted so we can go out and retrieve it
 		    sqlsb.delete(0, sqlsb.length());
-		    colsb.delete(0, colsb.length());
-	        buildExtendedColumnList(colsb);
+		    // colsb is the same BasicColumnList
 		    sqlsb.append("SELECT ");
 		    sqlsb.append(colsb.toString());
 		    sqlsb.append(" FROM ");
-		    sqlsb.append(_TABLE_NAME + " cp, ");
-		    sqlsb.append(EstimatorComponentTypeDao._TABLE_NAME + " ct");
-		    sqlsb.append(" WHERE cp.NAME = ");
+		    sqlsb.append(_TABLE_NAME);
+		    sqlsb.append(" WHERE NAME = ");
 		    sqlsb.append(saname);
-	        sqlsb.append(" AND cp." + _TYPE_COLUMN + " = ct." + _NAME_COLUMN);
 	        List<SolutionArtifact> results = new ArrayList<SolutionArtifact>();
 	        Function<M3DaoHandlerParam, M3DaoHandlerResult> qfunc = (param) ->
 	        {
@@ -228,10 +237,10 @@ public class EstimatorComponentDao extends AbstractDao {
 	        performQuery(ct, sqlsb.toString(), results, qfunc);
 		}
         // TODO Check and do something with mfex
-        return sa;
+        return ct;
     }
 
-    private SolutionArtifact update(SolutionArtifact sa) {
+    private M3Component update(M3Component sa) {
 	    // TODO Auto-generated method stub
 	    return null;
     }
@@ -277,61 +286,39 @@ public class EstimatorComponentDao extends AbstractDao {
 
     private void checkAndRefresh(ResultSet rs, M3Component ct, String colName, List<M3DaoFieldState> fieldsState, M3ModelFieldsException modelException) {
         M3DaoFieldState state = null;
-        M3ComponentType compType = new M3ComponentType();
-        int cnix = colName.indexOf(".");
-        String columnName = (cnix > 0) ? colName.substring(cnix+1) : colName;
-        if (_DESC_COLUMN.equals(columnName) && colName.startsWith("cp.")) {
+        if (_DESC_COLUMN.equals(colName)) {
             state = isSameStringValue(rs, "description", colName, ct.getDescription(), modelException);
             if (!state.same && !state.same && state.newValue != null) {
                 ct.setDescription((String) state.newValue);
             }
-        } else if (_COMPLEXITY_COLUMN.equals(columnName)) {
+        } else if (_COMPLEXITY_COLUMN.equals(colName)) {
             state = isSameStringValue(rs, "complexity", colName, ct.getComplexity().name(), modelException);
             retrieveComplexity(state, modelException);
             if (state != null && !state.same && state.newValue != null) {
             	ct.setComplexity( (Complexity)state.newValue);
             }
-        } else if (_LAYER_COLUMN.equals(columnName) && colName.startsWith("cp.")) {
+        } else if (_LAYER_COLUMN.equals(colName)) {
             state = isSameStringValue(rs, "layer", colName, ct.getLayer().name(), modelException);
             retrieveLayer(state, modelException);
             if (state != null && !state.same && state.newValue != null) {
             	ct.setLayer( (Layer)state.newValue);
             }
-        } else if (_LANGUAGE_COLUMN.equals(columnName)) {
+        } else if (_LANGUAGE_COLUMN.equals(colName)) {
             state = isSameStringValue(rs, "language", colName, ct.getLanguage().name(), modelException);
             retrieveLanguage(state, modelException);
             if (state != null && !state.same && state.newValue != null) {
             	ct.setLanguage( (Language)state.newValue);
             }
-        } else if (_COUNT_COLUMN.equals(columnName)) {
+        } else if (_COUNT_COLUMN.equals(colName)) {
             state = isSameLongValue(rs, "count", colName, ct.getCount(), modelException);
             if (state != null && !state.same && state.newValue != null) {
                 ct.setCount((Long) state.newValue);
             }
-        } else if (_TYPE_COLUMN.equals(columnName)) {
+        } else if (_TYPE_COLUMN.equals(colName)) {
             state = isSameStringValue(rs, "type", colName, ct.getType().getName(), modelException);
             if (state != null && !state.same) {
-                compType.setName((String) state.newValue);
+                // TODO This condition should be an exception
             }
-        } else if (_DESC_COLUMN.equals(columnName) && colName.startsWith("ct.")) {
-            state = isSameStringValue(rs, "description", colName, ct.getDescription(), modelException);
-            if (state != null && !state.same) {
-                compType.setDescription((String) state.newValue);
-            }
-        } else if (EstimatorComponentTypeDao._CONTEXT_COLUMN.equals(columnName)) {
-            state = isSameStringValue(rs, "context", colName, ct.getType().getContext().name(), modelException);
-            EstimatorComponentTypeDao.retrieveContext(state, modelException);
-            if (state != null && !state.same && state.newValue != null) {
-                compType.setContext( (ComponentContext)state.newValue);
-            }
-        } else if (_LAYER_COLUMN.equals(columnName) && colName.startsWith("ct.")) {
-            state = isSameStringValue(rs, "architecturalLayer", colName, ct.getType().getArchitecturalLayer().name(), modelException);
-            retrieveLayer(state, modelException);
-            if (state != null && !state.same && state.newValue != null) {
-                compType.setArchitecturalLayer( (Layer)state.newValue);
-            }
-        } else if (EstimatorComponentTypeDao._COST_COLUMN.equals(columnName)) {
-            state = null;
         } else
             modelException.addException(colName, "not associated with any field for column");
         if (state != null) {
@@ -340,87 +327,71 @@ public class EstimatorComponentDao extends AbstractDao {
         }
     }
 
-    private M3Component retrieveValues(ResultSet rs, ResultSetMetaData rsmd, List<M3DaoFieldState> fieldsState, M3ModelFieldsException mfex) {
-        int colCnt = getColumnCount(rsmd, mfex);
-        if (colCnt < 0) { // was an error so return, exception already recorded
-            return null;
-        }
-        M3Component ct = new M3Component();
+    private void retrieveValues(ResultSet rs, M3Component ct, String colName, List<M3DaoFieldState> fieldsState, M3ModelFieldsException mfex) {
         M3ComponentType compType = new M3ComponentType();
-        for (int colIx = 0; colIx < colCnt; colIx++) {
-            M3DaoFieldState state = null;
-            String colName = getColumnName(rsmd, colIx, mfex);
-            if (colName == null) {
-                state = new M3DaoFieldState();
-                state.fieldName = "UNKNOWN";
-                M3FieldException ex = mfex.addException(state.fieldName, "extracting column name from DB");
-                state.exception = ex;
-                fieldsState.add(state);
-                continue;
+        M3DaoFieldState state = null;
+        int cnix = colName.indexOf(".");
+        String columnName = (cnix > 0) ? colName.substring(cnix+1) : colName;
+        if (_DESC_COLUMN.equals(columnName) && colName.startsWith("cp.")) {
+            state = retrieveStringValue(rs, "description", colName, mfex);
+            if (state != null && !state.same && state.newValue != null) {
+                ct.setDescription((String) state.newValue);
             }
-            int cnix = colName.indexOf(".");
-            String columnName = (cnix > 0) ? colName.substring(cnix+1) : colName;
-            if (_DESC_COLUMN.equals(columnName) && colName.startsWith("cp.")) {
-                state = retrieveStringValue(rs, "description", colName, mfex);
-                if (state != null && !state.same && state.newValue != null) {
-                    ct.setDescription((String) state.newValue);
-                }
-            } else if (_COMPLEXITY_COLUMN.equals(columnName)) {
-                state = retrieveStringValue(rs, "complexity", colName, mfex);
-                retrieveComplexity(state, mfex);
-                if (state != null && !state.same && state.newValue != null) {
-                	ct.setComplexity( (Complexity) state.newValue);
-                }
-            } else if (_LAYER_COLUMN.equals(columnName) && colName.startsWith("cp.")) {
-                state = retrieveStringValue(rs, "layer", colName, mfex);
-                retrieveLayer(state, mfex);
-                if (state != null && !state.same && state.newValue != null) {
-                	ct.setLayer( (Layer) state.newValue);
-                }
-            } else if (_LANGUAGE_COLUMN.equals(columnName)) {
-                state = retrieveStringValue(rs, "language", colName, mfex);
-                retrieveLanguage(state, mfex);
-                if (state != null && !state.same && state.newValue != null) {
-                	ct.setLanguage( (Language) state.newValue);
-                }
-            } else if (_COUNT_COLUMN.equals(columnName)) {
-                state = retrieveLongValue(rs, "count", colName, mfex);
-                if (state != null && !state.same && state.newValue != null) {
-                    ct.setCount((Long) state.newValue);
-                }
-            } else if (_TYPE_COLUMN.equals(columnName)) {
-                state = retrieveStringValue(rs, "type", colName, mfex);
-                if (state != null && !state.same && state.newValue != null) {
-                    compType.setName((String) state.newValue);
-                }
-            } else if (_DESC_COLUMN.equals(columnName) && colName.startsWith("ct.")) {
-                state = retrieveStringValue(rs, "description", colName, mfex);
-                if (state != null && !state.same && state.newValue != null) {
-	                compType.setDescription((String) state.newValue);
-                }
-            } else if (EstimatorComponentTypeDao._CONTEXT_COLUMN.equals(columnName)) {
-                state = retrieveStringValue(rs, "context", colName, mfex);
-                EstimatorComponentTypeDao.retrieveContext(state, mfex);
-                if (state != null && !state.same && state.newValue != null) {
-                    compType.setContext( (ComponentContext)state.newValue);
-                }
-            } else if (_LAYER_COLUMN.equals(columnName) && colName.startsWith("ct.")) {
-                state = retrieveStringValue(rs, "architecturalLayer", colName, mfex);
-                retrieveLayer(state, mfex);
-                if (state != null && !state.same && state.newValue != null) {
-                    compType.setArchitecturalLayer( (Layer)state.newValue);
-                }
-            } else if (EstimatorComponentTypeDao._COST_COLUMN.equals(columnName)) {
-                state = null;
-            } else {
-                mfex.addException(colName, "not associated with any field for column");
+        } else if (_COMPLEXITY_COLUMN.equals(columnName)) {
+            state = retrieveStringValue(rs, "complexity", colName, mfex);
+            retrieveComplexity(state, mfex);
+            if (state != null && !state.same && state.newValue != null) {
+            	ct.setComplexity( (Complexity) state.newValue);
             }
-            if (state != null) {
-                if (!state.same || state.exception != null)
-                    fieldsState.add(state);
+        } else if (_LAYER_COLUMN.equals(columnName) && colName.startsWith("cp.")) {
+            state = retrieveStringValue(rs, "layer", colName, mfex);
+            retrieveLayer(state, mfex);
+            if (state != null && !state.same && state.newValue != null) {
+            	ct.setLayer( (Layer) state.newValue);
             }
+        } else if (_LANGUAGE_COLUMN.equals(columnName)) {
+            state = retrieveStringValue(rs, "language", colName, mfex);
+            retrieveLanguage(state, mfex);
+            if (state != null && !state.same && state.newValue != null) {
+            	ct.setLanguage( (Language) state.newValue);
+            }
+        } else if (_COUNT_COLUMN.equals(columnName)) {
+            state = retrieveLongValue(rs, "count", colName, mfex);
+            if (state != null && !state.same && state.newValue != null) {
+                ct.setCount((Long) state.newValue);
+            }
+        } else if (_TYPE_COLUMN.equals(columnName)) {
+            state = retrieveStringValue(rs, "type", colName, mfex);
+            if (state != null && !state.same && state.newValue != null) {
+                compType.setName((String) state.newValue);
+            }
+        } else if (_DESC_COLUMN.equals(columnName) && colName.startsWith("ct.")) {
+            state = retrieveStringValue(rs, "description", colName, mfex);
+            if (state != null && !state.same && state.newValue != null) {
+                compType.setDescription((String) state.newValue);
+            }
+        } else if (EstimatorComponentTypeDao._CONTEXT_COLUMN.equals(columnName)) {
+            state = retrieveStringValue(rs, "context", colName, mfex);
+            EstimatorComponentTypeDao.retrieveContext(state, mfex);
+            if (state != null && !state.same && state.newValue != null) {
+                compType.setContext( (ComponentContext)state.newValue);
+            }
+        } else if (_LAYER_COLUMN.equals(columnName) && colName.startsWith("ct.")) {
+            state = retrieveStringValue(rs, "architecturalLayer", colName, mfex);
+            retrieveLayer(state, mfex);
+            if (state != null && !state.same && state.newValue != null) {
+                compType.setArchitecturalLayer( (Layer)state.newValue);
+            }
+        } else if (EstimatorComponentTypeDao._COST_COLUMN.equals(columnName)) {
+            state = null;
+            // TODO We really do need to retrieve the value
+        } else {
+            mfex.addException(colName, "not associated with any field for column");
         }
-	    return ct;
+        if (state != null) {
+            if (!state.same || state.exception != null)
+                fieldsState.add(state);
+        }
 	}
 
 	static void retrieveComplexity(M3DaoFieldState state, M3ModelFieldsException mfex) {

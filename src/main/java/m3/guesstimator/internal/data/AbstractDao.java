@@ -180,6 +180,40 @@ public abstract class AbstractDao {
         return state;
     }
 
+    protected M3DaoFieldState isSameStringValue(String fldName, String oldValue, String newValue, M3ModelFieldsException modelException) {
+        M3DaoFieldState state = new M3DaoFieldState();
+        state.fieldName = fldName;
+        state.same = true;
+        if (newValue == null) {
+            state.same = (oldValue == null);
+        } else { // New is not null
+            if (oldValue == null) {
+                state.same = false;
+                state.newValue = newValue;
+            } else {
+                state.same = oldValue.equals(newValue);
+            }
+        }
+        return state;
+    }
+
+    protected M3DaoFieldState isSameLongValue(String fldName, Long oldValue, Long newValue, M3ModelFieldsException modelException) {
+        M3DaoFieldState state = new M3DaoFieldState();
+        state.fieldName = fldName;
+        state.same = true;
+        if (newValue == null) {
+            state.same = (oldValue == null);
+        } else { // New is not null
+            if (oldValue == null) {
+                state.same = false;
+                state.newValue = newValue;
+            } else {
+                state.same = oldValue.equals(newValue);
+            }
+        }
+        return state;
+    }
+
     static void retrieveLayer(M3DaoFieldState state, M3ModelFieldsException mfex) {
         if (state != null && !state.same && state.newValue != null) {
             Layer dbVal = null;
