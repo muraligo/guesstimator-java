@@ -1,5 +1,6 @@
 package m3.guesstimator.internal;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -530,16 +531,28 @@ class GuesstimatorInitializer {
         M3ComponentType ct = createComponentType(name, desc, compCtx, layer, costs);
         // em.persist(ct);
         M3ComponentType ct2 = dao.put(ct);
-        String[] name_parts = ct2.getName().split(".");
-        Map<String, Map<String, M3ComponentType>> env = GuesstimatorApplication._componentTypeCache.get(name_parts[0]);
+		String nm = ct2.getName();
+        ArrayList<String> name_parts = new ArrayList<String>();
+        int ix = 0, oix = 0, nix = 0;
+        while (nix >= 0) {
+        	oix = nix;
+        	nix = nm.indexOf('.', oix);
+        	if (nix > 0) {
+        	    name_parts.add(nm.substring(oix, nix));
+        	    nix++;
+            } else if (oix > nix) {
+        	    name_parts.add(nm.substring(oix));
+            }
+		}
+        Map<String, Map<String, M3ComponentType>> env = GuesstimatorApplication._componentTypeCache.get(name_parts.get(0));
         if (env == null) {
             env = Collections.synchronizedMap(new ConcurrentHashMap<String, Map<String, M3ComponentType>>(20));
-            GuesstimatorApplication._componentTypeCache.put(name_parts[0], env);
+            GuesstimatorApplication._componentTypeCache.put(name_parts.get(0), env);
         }
-        Map<String, M3ComponentType> resource_type = env.get(name_parts[1]);
+        Map<String, M3ComponentType> resource_type = env.get(name_parts.get(1));
         if (resource_type == null) {
             resource_type = Collections.synchronizedMap(new ConcurrentHashMap<String, M3ComponentType>(20));
-            env.put(name_parts[1], resource_type);
+            env.put(name_parts.get(1), resource_type);
         }
         resource_type.put(ct2.getName(), ct2);
    }

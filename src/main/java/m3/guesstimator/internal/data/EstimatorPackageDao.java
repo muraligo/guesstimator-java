@@ -358,32 +358,31 @@ public class EstimatorPackageDao extends AbstractDao {
             M3DaoFieldState state = isSameStringValue("description", ct2.getDescription(), ct3.getDescription(), modelException);
             if (state != null && state.same) {
             	// TODO remove from map
-            	continue;
-            }
-            state = isSameStringValue("complexity", ct2.getComplexity().name(), ct3.getComplexity().name(), modelException);
-            if (state != null && state.same) {
-            	// TODO remove from map
-            	continue;
-            }
-            state = isSameStringValue("layer", ct2.getLayer().name(), ct3.getLayer().name(), modelException);
-            if (state != null && state.same) {
-            	// TODO remove from map
-            	continue;
-            }
-            state = isSameStringValue("language", ct2.getLanguage().name(), ct3.getLanguage().name(), modelException);
-            if (state != null && state.same) {
-            	// TODO remove from map
-            	continue;
-            }
-            state = isSameLongValue("count", ct2.getCount(), ct3.getCount(), modelException);
-            if (state != null && state.same) {
-            	// TODO remove from map
-            	continue;
-            }
-            state = isSameStringValue("type", ct2.getType().getName(), ct3.getType().getName(), modelException);
-            if (state != null && state.same) {
-            	// TODO remove from map
-            	continue;
+            } else {
+                state = isSameStringValue("complexity", ct2.getComplexity().name(), ct3.getComplexity().name(), modelException);
+                if (state != null && state.same) {
+                    // TODO remove from map
+                } else {
+                    state = isSameStringValue("layer", ct2.getLayer().name(), ct3.getLayer().name(), modelException);
+                    if (state != null && state.same) {
+                        // TODO remove from map
+                    } else {
+                        state = isSameStringValue("language", ct2.getLanguage().name(), ct3.getLanguage().name(), modelException);
+                        if (state != null && state.same) {
+                            // TODO remove from map
+                        } else {
+                            state = isSameLongValue("count", ct2.getCount(), ct3.getCount(), modelException);
+                            if (state != null && state.same) {
+                                // TODO remove from map
+                            } else {
+                                state = isSameStringValue("type", ct2.getType().getName(), ct3.getType().getName(), modelException);
+                                if (state != null && state.same) {
+                                    // TODO remove from map
+                                }
+                            }
+                        }
+                    }
+                }
             }
         });
     }

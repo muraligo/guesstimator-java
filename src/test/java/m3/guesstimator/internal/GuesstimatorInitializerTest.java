@@ -1,8 +1,8 @@
 package m3.guesstimator.internal;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
@@ -13,9 +13,11 @@ import static org.mockito.Mockito.isA;
 
 import java.util.HashMap;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
@@ -26,8 +28,10 @@ import m3.guesstimator.internal.data.EstimatorComponentTypeDao;
 import m3.guesstimator.model.reference.M3ComponentType;
 import m3.guesstimator.model.reference.ConstructionPhase;
 import m3.guesstimator.service.ApplicationContext;
+import m3.guesstimator.testutil.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@RunWith(JUnitPlatform.class)
 public class GuesstimatorInitializerTest {
     private static final boolean DEBUG = true;
 
@@ -41,7 +45,7 @@ public class GuesstimatorInitializerTest {
     @Mock
     GuesstimatorApplication app;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         data.clear();
         target = new GuesstimatorInitializer(app);
@@ -60,7 +64,7 @@ public class GuesstimatorInitializerTest {
         }).when(dao).put(isA(M3ComponentType.class));
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
     }
 
