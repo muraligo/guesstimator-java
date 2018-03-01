@@ -2,7 +2,6 @@ package m3.guesstimator.model.functional;
 
 import java.io.Serializable;
 
-import m3.guesstimator.model.reference.M3DataType;
 import m3.guesstimator.model.reference.M3MessageSubtype;
 import m3.guesstimator.model.reference.M3MessageType;
 
@@ -14,7 +13,9 @@ public class M3InternalMessage implements Serializable, Comparable<M3InternalMes
     private String version;
     private M3MessageType type;
     private M3MessageSubtype subtype;
-    private M3DataType datatype;
+    private String datatypname;
+    private String datatype; // xsd content
+    private Long datatypfactor;
 
 	public String getName() {
 		return name;
@@ -67,11 +68,25 @@ public class M3InternalMessage implements Serializable, Comparable<M3InternalMes
 	    subtype = value;
 	}
 
-	public M3DataType getDatatype() {
+	public String getDatatypname() {
+		return datatypname;
+	}
+	public void setDatatypname(String value) {
+		datatypname = value;
+	}
+
+	public String getDatatype() {
 		return datatype;
 	}
-	public void setDatatype(M3DataType value) {
+	public void setDatatype(String value) {
 		datatype = value;
+	}
+
+	public Long getDatatypfactor() {
+		return datatypfactor;
+	}
+	public void setDatatypfactor(Long value) {
+		datatypfactor = value;
 	}
 
     @Override
@@ -81,7 +96,9 @@ public class M3InternalMessage implements Serializable, Comparable<M3InternalMes
         sb.append(".");
         sb.append(subtype);
         sb.append(", ");
-        sb.append(datatype);
+        sb.append(datatypname);
+        sb.append("-");
+        sb.append(datatypfactor);
         sb.append("}");
         return sb.toString();
     }

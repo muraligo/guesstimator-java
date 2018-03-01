@@ -3,6 +3,7 @@ package m3.guesstimator.model.functional;
 import m3.guesstimator.model.ContainingSolutionArtifact;
 import m3.guesstimator.model.ParseablePrimaryCollection;
 import m3.guesstimator.model.reference.ConstructionPhase;
+import m3.guesstimator.model.reference.M3MessageSubtype;
 import m3.guesstimator.model.reference.M3MessageType;
 import m3.guesstimator.model.reference.VerifyCategory;
 
@@ -11,10 +12,16 @@ public class M3Interaction extends AbstractSolutionArtifact {
 
 	private ContainingSolutionArtifact source;
 	private ContainingSolutionArtifact target;
-	private M3InternalMessage message;
+	private String fromKind;
+	private String toKind;
 	private String api;
+    private M3MessageType messagetype;
+    private M3MessageSubtype messagesubtype;
+    private String msgdatatypname;
+    private Long msgdatatypfactor;
 	private String strConstructCosts;
-    protected String strVerifications;
+    private String strVerifications;
+    private String msgdatatype; // xsd content
 	// fields below are non-persistent
 	transient private Long[] constructionEstimates;
 	transient private boolean constructEstimateComputed = false;
@@ -37,12 +44,18 @@ public class M3Interaction extends AbstractSolutionArtifact {
         target = value;
     }
 
-    public M3InternalMessage getMessage() {
-        return message;
+    public String getFromKind() {
+        return fromKind;
     }
-    public void setMessage(M3InternalMessage value) {
-        message = value;
-        constructEstimateComputed = false;
+    public void setFromKind(String value) {
+        fromKind = value;
+    }
+
+    public String getToKind() {
+        return toKind;
+    }
+    public void setToKind(String value) {
+        toKind = value;
     }
 
     public String getApi() {
@@ -51,6 +64,34 @@ public class M3Interaction extends AbstractSolutionArtifact {
     public void setApi(String value) {
         api = value;
     }
+
+	public M3MessageType getMessageType() {
+		return messagetype;
+	}
+	public void setMessageType(M3MessageType value) {
+		messagetype = value;
+	}
+
+	public M3MessageSubtype getMessageSubtype() {
+		return messagesubtype;
+	}
+	public void setMessageSubtype(M3MessageSubtype value) {
+	    messagesubtype = value;
+	}
+
+	public String getMessageDatatypname() {
+		return msgdatatypname;
+	}
+	public void setMessageDatatypname(String value) {
+		msgdatatypname = value;
+	}
+
+	public Long getMessageDatatypfactor() {
+		return msgdatatypfactor;
+	}
+	public void setMessageDatatypfactor(Long value) {
+		msgdatatypfactor = value;
+	}
 
     public String getStrConstructCosts() {
         return strConstructCosts;
@@ -73,6 +114,13 @@ public class M3Interaction extends AbstractSolutionArtifact {
         verifications.setStrCollection(value);
         verifyEstimateComputed = false;
     }
+
+	public String getMessageDatatype() {
+		return msgdatatype;
+	}
+	public void setMessageDatatype(String value) {
+		msgdatatype = value;
+	}
 
     @Override
     public Long getConstructPhaseEstimate(ConstructionPhase phase) {
@@ -110,7 +158,7 @@ public class M3Interaction extends AbstractSolutionArtifact {
 
     @Override
     public String toString() {
-        StringBuffer sb = new StringBuffer("Component#");
+        StringBuffer sb = new StringBuffer("Interaction#");
         sb.append(super.toString());
         sb.append("{source:");
         sb.append(source.getName());
@@ -122,10 +170,18 @@ public class M3Interaction extends AbstractSolutionArtifact {
         sb.append("<");
         sb.append(target.getClass().getSimpleName());
         sb.append(">");
-        sb.append(", ");
-        sb.append(message);
         sb.append(", api:");
         sb.append(api);
+        sb.append(", ");
+        sb.append(messagetype);
+        sb.append(".");
+        if (messagesubtype != null) {
+            sb.append(messagesubtype);
+        }
+        sb.append(".");
+        sb.append(msgdatatypname);
+        sb.append("-");
+        sb.append(msgdatatypfactor);
         sb.append("}");
         return sb.toString();
     }
@@ -143,11 +199,10 @@ public class M3Interaction extends AbstractSolutionArtifact {
     private void computeConstructEstimate() {
         for (ConstructionPhase p : ConstructionPhase.values()) {
             long estimate = getConstructCost(p);
-            M3InternalMessage msg = getMessage();
-            M3MessageType msg_type = msg.getType();
+            M3MessageType msg_type = getMessageType();
             estimate *= msg_type.factor();
-            estimate *= (msg_type.hasSubtype() ? msg.getSubtype().factor() : 1);
-            estimate *= msg.getDatatype().factor();
+            estimate *= (msg_type.hasSubtype() ? getMessageSubtype().factor() : 1);
+            estimate *= getMessageDatatypfactor();
             constructionEstimates[p.ordinal()] = estimate;
         }
     }

@@ -7,7 +7,7 @@ public class M3Message extends M3InternalMessage {
 
     private M3Encoding encoding;
 
-	public M3Encoding getEnvoding() {
+	public M3Encoding getEncoding() {
 		return encoding;
 	}
 	public void setEncoding(M3Encoding value) {
