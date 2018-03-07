@@ -23,8 +23,8 @@ public class ComponentTypeTest {
 	private static final ComponentContext COMPT_CTX = ComponentContext.DevOps;
 	private static final Layer COMPT_LAYER = Layer.Technical;
 	private static final String COMPT_DATA = 
-			"[ {\"phase\": \"Analysis\", \"value\": \"5\"}, {\"phase\": \"Design\", \"value\": \"10\"}, "
-					+ " {\"phase\": \"Build\", \"value\": \"10\"}, {\"phase\": \"Test\", \"value\": \"5\"} ]";
+			"[ {\"name\": Analysis, \"value\": 5}, {\"name\": Design, \"value\": 10}, "
+					+ " {\"name\": Build, \"value\": 10}, {\"name\": Verify, \"value\": 5} ]";
 
     private M3ComponentType target = null;
     private LocalDateTime currTime = null;
@@ -46,7 +46,7 @@ public class ComponentTypeTest {
 		target.setDescription(COMPT_DESC);
 		target.setContext(COMPT_CTX);
 		target.setArchitecturalLayer(COMPT_LAYER);
-		assertTrue(target.isConstructParseTimeSameAs(currTime));
+		assertTrue(target.isConstructParseTimeInitial());
 		assertTrue(target.isConstructUpdateTimeSameAs(currTime));
 		try {
 			Thread.sleep(10);
@@ -54,7 +54,7 @@ public class ComponentTypeTest {
 			//
 		}
 		target.setStrConstructCosts(COMPT_DATA);
-		assertTrue(target.isConstructParseTimeSameAs(currTime));
+		assertTrue(target.isConstructParseTimeInitial());
 		assertFalse(target.isConstructUpdateTimeSameAs(currTime));
 //		printTimeCompare("Update", updateTime, target.constructCostUpdatedAt);
 	}
@@ -76,7 +76,7 @@ public class ComponentTypeTest {
 		assertFalse(target.isConstructParseTimeSameAs(currTime));
 		assertEquals(5L, costs.get(ConstructionPhase.Analysis).longValue());
 		assertEquals(10L, costs.get(ConstructionPhase.Design).longValue());
-		assertEquals(10L, costs.get(ConstructionPhase.Develop).longValue());
+		assertEquals(10L, costs.get(ConstructionPhase.Build).longValue());
 		assertEquals(5L, costs.get(ConstructionPhase.Verify).longValue());
 	}
 
@@ -89,9 +89,9 @@ public class ComponentTypeTest {
 			inicosts.put(p, c);
 		}
 		Map<ConstructionPhase, Long> modcosts = new HashMap<ConstructionPhase, Long>();
-		String modData = 
-				"[ {\"phase\": \"Analysis\", \"value\": 7}, {\"phase\": \"Design\", \"value\": 10}, "
-						+ " {\"phase\": \"Build\", \"value\": 12}, {\"phase\": \"Test\", \"value\": 6} ]";
+		String modData =
+				"[ {\"name\": Analysis, \"value\": 7}, {\"name\": Design, \"value\": 10}, "
+						+ " {\"name\": Build, \"value\": 12}, {\"name\": Verify, \"value\": 6} ]";
 		try {
 			Thread.sleep(100);
 		} catch (InterruptedException ie) {
@@ -105,7 +105,7 @@ public class ComponentTypeTest {
 		assertFalse(target.isConstructParseTimeSameAs(currTime));
 		assertNotEquals(inicosts.get(ConstructionPhase.Analysis).longValue(), modcosts.get(ConstructionPhase.Analysis).longValue());
 		assertEquals(inicosts.get(ConstructionPhase.Design).longValue(), modcosts.get(ConstructionPhase.Design).longValue());
-		assertNotEquals(inicosts.get(ConstructionPhase.Develop).longValue(), modcosts.get(ConstructionPhase.Develop).longValue());
+		assertNotEquals(inicosts.get(ConstructionPhase.Build).longValue(), modcosts.get(ConstructionPhase.Build).longValue());
 		assertNotEquals(inicosts.get(ConstructionPhase.Verify).longValue(), modcosts.get(ConstructionPhase.Verify).longValue());
 	}
 
@@ -135,8 +135,7 @@ public class ComponentTypeTest {
 		} catch (Exception ex) {
 			boolean expectedException = false;
 			if (ex instanceof M3ModelException) {
-				if (ex.getMessage().startsWith("Exception matching enum with phase in") && 
-						ex.getCause() instanceof IllegalArgumentException) {
+				if (ex.getMessage().startsWith("Exception matching name in")) {
 					expectedException = true;
 				}
 			}

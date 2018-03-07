@@ -15,7 +15,7 @@ public class ComponentCollectionResource extends AbstractCollectionResource {
     public EstimatorResponse findAll() {
         EstimatorResponse response = null;
         try {
-            List<SolutionArtifact> results = getDao().find(new M3Component(), null);
+            List<M3Component> results = getDao().find(null);
             response = new EstimatorResponse(results);
         } catch (M3ModelFieldsException mfex) {
             // TODO handle the exception

@@ -46,7 +46,7 @@ public class ParseablePrimaryCollection<E extends Enum<E>, T> {
     @SuppressWarnings("unchecked")
 	public ParseablePrimaryCollection(String modelName, String fld, Class<E> clsNm, Class<T> clsVal, T initValue, LocalDateTime currTime) {
         super();
-        parsedAt = currTime;
+        parsedAt = null;
         updatedAt = currTime;
         this.modelName = modelName;
         fieldName = fld;
@@ -216,27 +216,27 @@ public class ParseablePrimaryCollection<E extends Enum<E>, T> {
     }
 
     public class NameValue {
-        private String _name;
-        private String _value;
+        private String name;
+        private String value;
 
         public String getName() {
-            return _name;
+            return name;
         }
         public void setName(String nm) {
-            _name = nm;
+            name = nm;
         }
 
         public Object getValue() {
-            return _value;
+            return value;
         }
         public void setValue(String val) {
-            _value = val;
+            value = val;
         }
     }
 
     private void parseNameValues() {
-        Type collectionType = new TypeToken<List<List<NameValue>>>(){}.getType();
-	    List<List<NameValue>> l = null;
+        Type collectionType = new TypeToken<List<NameValue>>(){}.getType();
+	    List<NameValue> l = null;
 	    try {
 	        l = _gson.fromJson(strCollection, collectionType);
 	    } catch (JsonSyntaxException e) {
@@ -248,13 +248,27 @@ public class ParseablePrimaryCollection<E extends Enum<E>, T> {
 			NameValue nvt = (NameValue)nv;
 	        int ix = nameCheck(nvt.getName());
 	        // Assume valid index; exception already thrown if not found
-	        _collection[ix] = checkAndGetValue(nvt.getValue());
+	        T val = checkAndGetValue(nvt.getValue());
+            _collection[ix] = val;
 	    });
     }
 
     @SuppressWarnings("unchecked")
 	private T checkAndGetValue(Object val) {
-        if (_valueClass.isAssignableFrom(val.getClass())) {
+        if (_valueClass.isPrimitive() || primitiveClassCheck()) {
+            String valclsnm = val.getClass().getSimpleName();
+            try {
+                T retVal = null;
+                if ("String".equals(valclsnm)) {
+                    retVal = parseStringToPrimitive((String)val);
+                } else {
+                    retVal = (T) val;
+                }
+                return retVal;
+            } catch (ClassCastException ex) {
+                throw new IllegalArgumentException("Value [" + val + "] is not of type [" + _valueClass.getSimpleName() + "]");
+            }
+        } else if (_valueClass.isAssignableFrom(val.getClass())) {
             return (T)val;
         }
         throw new IllegalArgumentException("Value [" + val + "] is not of type [" + _valueClass.getSimpleName() + "]");
@@ -271,7 +285,7 @@ public class ParseablePrimaryCollection<E extends Enum<E>, T> {
         if (nm != null) {
         	E enumForName = null;
             for (int i = 0; i < _size; i++)
-                if (nm.equals(_names[i])) {
+                if (nm.equals(_names[i].name())) {
                     enumForName = _names[i];
                 }
             if (enumForName != null)
@@ -280,12 +294,23 @@ public class ParseablePrimaryCollection<E extends Enum<E>, T> {
         throw new M3ModelException(modelName, fieldName, nm, "matching name in");
     }
 
+    private boolean primitiveClassCheck() {
+        return "Long".equals(_valueClass.getSimpleName());
+    }
+
+    private T parseStringToPrimitive(String val) {
+        if ("Long".equals(_valueClass.getSimpleName())) {
+            return (T)Long.valueOf(val);
+        }
+        throw new IllegalArgumentException("Value [" + val + "] cannot be converted to [" + _valueClass.getSimpleName() + "]");
+    }
+
     public boolean isParsedBefore(LocalDateTime currTime) {
-	    return parsedAt.isBefore(currTime);
+	    return parsedAt != null && parsedAt.isBefore(currTime);
     }
 
     public boolean isParsedAfter(LocalDateTime currTime) {
-	    return parsedAt.isAfter(currTime);
+	    return parsedAt == null || parsedAt.isAfter(currTime);
     }
 
     public boolean isUpdatedBefore(LocalDateTime currTime) {
@@ -294,6 +319,10 @@ public class ParseablePrimaryCollection<E extends Enum<E>, T> {
 
     public boolean isUpdatedAfter(LocalDateTime currTime) {
 	    return updatedAt.isAfter(currTime);
+    }
+
+    public boolean isNotParsed() {
+        return parsedAt == null;
     }
 
 }

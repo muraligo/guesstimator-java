@@ -76,7 +76,7 @@ public class M3ComponentType implements Serializable, Comparable<M3ComponentType
 
     @Override
     public String toString() {
-        StringBuffer sb = new StringBuffer("ComponentType#" + name + "{");
+        StringBuilder sb = new StringBuilder("ComponentType#" + name + "{");
         sb.append(context);
         sb.append(".");
         sb.append(architecturalLayer);
@@ -99,13 +99,17 @@ public class M3ComponentType implements Serializable, Comparable<M3ComponentType
 
     @Override
     public boolean equals(Object obj) {
-        return compareTo((M3ComponentType)obj) == 0;
+        return (obj instanceof M3ComponentType) && compareTo((M3ComponentType)obj) == 0;
     }
 
     @Override
     protected Object clone() throws CloneNotSupportedException {
         // TODO Auto-generated method stub
         return super.clone();
+    }
+
+    boolean isConstructParseTimeInitial() {
+        return constructCosts.isNotParsed();
     }
 
     boolean isConstructParseTimeSameAs(LocalDateTime currTime) {

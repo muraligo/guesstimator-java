@@ -21,7 +21,6 @@ import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
-import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
 import m3.guesstimator.internal.data.EstimatorComponentTypeDao;
@@ -76,12 +75,11 @@ public class GuesstimatorInitializerTest {
             printException(ex);
             fail("Exception in parsing " + ex.getMessage());
         }
-//		verify(tx, times(5)).commit();
         assertEquals(89, data.size());
-        M3ComponentType ct = data.get("Dev.Physical.Build.Storage");
+        M3ComponentType ct = data.get("Dev.Physical.Build-Storage");
         Long res = null;
         try {
-            res = ct.getConstructCost(ConstructionPhase.Develop);
+            res = ct.getConstructCost(ConstructionPhase.Build);
             assertEquals(25L, res.longValue());
         } catch (Exception ex) {
             printException(ex);
