@@ -2,21 +2,21 @@ package m3.guesstimator.internal;
 
 import java.util.List;
 
-import m3.guesstimator.internal.data.EstimatorComponentDao;
+import m3.guesstimator.internal.data.EstimatorPackageDao;
 import m3.guesstimator.internal.data.EstimatorResponse;
 import m3.guesstimator.model.M3ModelException;
 import m3.guesstimator.model.M3ModelFieldsException;
-import m3.guesstimator.model.functional.M3Component;
+import m3.guesstimator.model.functional.M3Package;
 
-public class ComponentCollectionResource extends AbstractCollectionResource<M3Component> {
+public class PackageCollectionResource extends AbstractCollectionResource<M3Package> {
 
     @Override
-    public EstimatorResponse<M3Component> retrieveAll() {
-        EstimatorResponse<M3Component> response = null;
+    public EstimatorResponse<M3Package> retrieveAll() {
+        EstimatorResponse<M3Package> response = null;
         try {
-            List<M3Component> results = getDao().find(null);
+            List<M3Package> results = getDao().find(null);
             if (results != null && !results.isEmpty()) {
-                response = new EstimatorResponse<M3Component>(results);
+                response = new EstimatorResponse<M3Package>(results);
             } else {
     		    // TODO Set a NotFound exception
             }
@@ -28,9 +28,9 @@ public class ComponentCollectionResource extends AbstractCollectionResource<M3Co
         return response;
     }
 
-    private EstimatorComponentDao getDao() {
-        if (dao instanceof EstimatorComponentDao) {
-            return (EstimatorComponentDao) dao;
+    private EstimatorPackageDao getDao() {
+        if (dao instanceof EstimatorPackageDao) {
+            return (EstimatorPackageDao) dao;
         }
         throw new ClassCastException("Invalid dao class " + dao.getClass().getName() + ".");
     }

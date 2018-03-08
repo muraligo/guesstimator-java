@@ -1,6 +1,5 @@
 package m3.guesstimator.internal;
 
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import m3.guesstimator.model.reference.M3ComponentType;

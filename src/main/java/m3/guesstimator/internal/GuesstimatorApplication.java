@@ -52,7 +52,7 @@ public class GuesstimatorApplication {
             EstimatorComponentDao dao = (EstimatorComponentDao) _daoMap.get("component");
             ComponentResource resource = new ComponentResource();
             resource.dao = dao;
-            EstimatorResponse resp = resource.put(ent);
+            EstimatorResponse<M3Component> resp = resource.store(ent);
             // Handle errors
             // TODO ideally following should not be here and the resp is returned
             // and the Transformers convert them
