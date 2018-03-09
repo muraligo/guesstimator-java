@@ -1,6 +1,5 @@
 package m3.guesstimator.internal;
 
-import m3.guesstimator.internal.data.EstimatorResponse;
 import m3.guesstimator.model.functional.M3Component;
 
 public class ComponentResource extends AbstractServerResource<M3Component> {

@@ -1,4 +1,4 @@
-package m3.guesstimator.internal.data;
+package m3.guesstimator.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;

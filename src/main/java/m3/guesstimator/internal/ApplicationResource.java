@@ -2,7 +2,6 @@ package m3.guesstimator.internal;
 
 //TODO change below to Application and checkin both this and DAO
 import m3.guesstimator.internal.data.EstimatorSubsystemDao;
-import m3.guesstimator.internal.data.EstimatorResponse;
 import m3.guesstimator.model.functional.M3Application;
 
 public class ApplicationResource extends AbstractServerResource<M3Application> {

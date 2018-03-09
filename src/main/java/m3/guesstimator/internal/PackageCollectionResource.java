@@ -3,7 +3,6 @@ package m3.guesstimator.internal;
 import java.util.List;
 
 import m3.guesstimator.internal.data.EstimatorPackageDao;
-import m3.guesstimator.internal.data.EstimatorResponse;
 import m3.guesstimator.model.M3ModelException;
 import m3.guesstimator.model.M3ModelFieldsException;
 import m3.guesstimator.model.functional.M3Package;
