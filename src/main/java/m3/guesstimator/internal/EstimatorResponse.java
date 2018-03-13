@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import m3.guesstimator.model.M3ModelException;
+import m3.guesstimator.model.M3ModelFieldsException;
 import m3.guesstimator.model.SolutionArtifact;
 
 public class EstimatorResponse<E extends SolutionArtifact> {
@@ -46,7 +47,35 @@ public class EstimatorResponse<E extends SolutionArtifact> {
 
     public String error() {
         String res = null;
-        // TODO convert exception to error text
+        StringBuilder sb = new StringBuilder();
+        if (_exception instanceof M3ModelFieldsException) {
+            M3ModelFieldsException mfex = (M3ModelFieldsException)_exception;
+            sb.append("error: { message: ");
+            sb.append(mfex.getMessage());
+            sb.append(", field_errors: [ ");
+            for (M3ModelFieldsException.M3FieldException fex : mfex.getExceptions()) {
+                sb.append("{ message: ");
+                sb.append(fex.getMessage());
+                if (fex.getCause() != null) {
+                    sb.append(", cause: \"");
+                    sb.append(fex.getCause().toString());
+                    sb.append("\"");
+                }
+                sb.append("}");
+            }
+            sb.append("] ");
+            sb.append("}");
+        } else {
+            sb.append("error: { message: ");
+            sb.append(_exception.getMessage());
+            if (_exception.getCause() != null) {
+                sb.append(", cause: \"");
+                sb.append(_exception.getCause().toString());
+                sb.append("\"");
+            }
+            sb.append("}");
+        }
+        res = sb.toString();
         return res;
     }
 }

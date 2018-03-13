@@ -1,5 +1,6 @@
 package m3.guesstimator.internal;
 
+import java.util.HashMap;
 import java.util.List;
 
 import m3.guesstimator.internal.data.EstimatorComponentDao;
@@ -34,4 +35,8 @@ public class ComponentCollectionResource extends AbstractCollectionResource<M3Co
         throw new ClassCastException("Invalid dao class " + dao.getClass().getName() + ".");
     }
 
+    public static HashMap<String, Object> toTableAndJsonWithIndex(EstimatorResponse<M3Component> resp) {
+        // TODO Implement
+        return null;
+    }
 }

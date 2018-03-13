@@ -1,6 +1,7 @@
 package m3.guesstimator.internal;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -15,6 +16,8 @@ import m3.guesstimator.internal.data.EstimatorComponentTypeDao;
 import m3.guesstimator.model.functional.M3Component;
 import m3.guesstimator.model.reference.M3ComponentType;
 import m3.guesstimator.service.ApplicationContext;
+import spark.ModelAndView;
+import spark.template.handlebars.HandlebarsTemplateEngine;
 
 public class GuesstimatorApplication {
     GuesstimatorContext ctx;
@@ -34,13 +37,16 @@ public class GuesstimatorApplication {
         initializer.initializeComponentType((EstimatorComponentTypeDao) _daoMap.get("component_type"));
 
         // ******** verbs for component type resource **********
-        post("/getall/component_type", (req, res) -> {
+        get("/component_types", (req, res) -> {
             ComponentTypeCollectionResource resource = new ComponentTypeCollectionResource();
             // retrieve all from cache and so get a JSON
             String result = resource.findAll();
-            res.status(200);
-            res.type("application/json");
-            return result;
+            HashMap<String, Object> model = new HashMap<String, Object>(1);
+            model.put("compTypeTableData", result);
+            ModelAndView mv = new ModelAndView(model, "/component_types/");
+//            res.status(200);
+//            res.type("application/json");
+            return new HandlebarsTemplateEngine().render(mv);
         });
 
         // ******** verbs for component resource **********
@@ -52,11 +58,34 @@ public class GuesstimatorApplication {
             resource.dao = dao;
             EstimatorResponse<M3Component> resp = resource.store(ent);
             // Handle errors
-            // TODO ideally following should not be here and the resp is returned
-            // and the Transformers convert them
+            if (resp.status() != 200) {
+                String errjson = resp.error();
+                // TODO put error in response
+            } else {
+                // TODO convert results to json and put in response
+            }
+            // TODO ideally following should not be here and the resp is returned and the Transformers convert them
             res.status(resp.status());
-            res.type("text/plain"); // actually pull from res
-            return "inserted"; // actually return a new value or something like that
+            res.type("text/plain"); // TODO actually pull from res
+            return "inserted"; // TODO actually return a new value or something like that
+        });
+        get("/components/", (req, res) -> {
+            EstimatorComponentDao dao = (EstimatorComponentDao) _daoMap.get("component");
+            ComponentCollectionResource resource = new ComponentCollectionResource();
+            resource.dao = dao;
+            EstimatorResponse<M3Component> resp = resource.retrieveAll();
+            ModelAndView mv = null;
+            // Handle errors
+            if (resp.status() == 200) {
+                HashMap<String, Object> model = ComponentCollectionResource.toTableAndJsonWithIndex(resp);
+                mv = new ModelAndView(model, "/components/");
+            } else {
+                String errjson = resp.error();
+                HashMap<String, Object> model = new HashMap<String, Object>(1);
+                model.put("errorJson", errjson);
+                mv = new ModelAndView(model, "/errors/");
+            }
+            return new HandlebarsTemplateEngine().render(mv);
         });
 	}
 

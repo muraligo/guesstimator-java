@@ -20,12 +20,13 @@ public class GuesstimatorMain {
 
             // Port and threadpool for HTTP server
 //          comp.getServers().add(Protocol.HTTP, 8182);
-            port(Integer.parseInt(config.getWeb().get("port")));
-            threadPool(Integer.parseInt(config.getWeb().get("threads")));
         } else {
-            System.out.println("App home not set!");
-            System.exit(1);
+            config = GuesstimatorContext.defaultContext();
         }
+        port(Integer.parseInt(config.getWeb().get("port")));
+        threadPool(Integer.parseInt(config.getWeb().get("threads.max")),
+                Integer.parseInt(config.getWeb().get("threads.min")),
+                Integer.parseInt(config.getWeb().get("threads.timeout")));
 
         // Attach the paths and resources to the local host
         GuesstimatorApplication app = new GuesstimatorApplication(config);

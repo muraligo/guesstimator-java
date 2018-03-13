@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -48,6 +49,17 @@ public class GuesstimatorContext implements ApplicationContext {
             config.setAppHome(appHome);
             logger.info(config.toString());
         }
+        return config;
+    }
+
+    public static ApplicationContext defaultContext() {
+        GuesstimatorContext config = new GuesstimatorContext();
+        config.setAppHome("DEFAULT");
+        config.web = new HashMap<String, String>();
+        config.web.put("port", "8082");
+        config.web.put("threads.max", "8");
+        config.web.put("threads.min", "2");
+        config.web.put("threads.timeout", "30000");
         return config;
     }
 }
