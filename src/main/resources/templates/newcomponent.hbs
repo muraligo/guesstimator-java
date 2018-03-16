@@ -1,0 +1,128 @@
+
+<style type="text/css">
+    div#inputModal .modal-content {
+        /*border: 2px solid #104774 !important;*/
+        border-radius: 0px;
+    }
+
+    div#inputModal .modal-header {
+        padding-top: 3px;
+        background-color: #104774;
+        padding-bottom: 3px;
+        text-align: center;
+    }
+
+ 		div#inputModal .modal-body {
+ 			background-color: #fafafa !important;
+ 		}
+
+ 		div#inputModal .modal-footer {
+ 			background-color: #fafafa;
+ 			border: none;
+ 			padding-top: 0px;
+ 		}
+
+ 		#newBtRow {
+ 			padding-top: 5px;
+			padding-bottom: 5px;
+ 		}
+
+    #editPix {
+        position: absolute;
+        left: 80px;
+        top: 50px;
+        font-size: 20px;
+        opacity: .7
+    }		
+
+</style>
+</head>
+<body>
+	
+<!-- Modal -->
+<div id="inputModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <span id="detailsText">COMPONENT DETAILS</span>
+            </div>
+            <div class="modal-body">
+
+                <div class="row" id="detailsRow">
+
+                    <!-- details body -->
+                    <div class="row" id="detailsBody">
+
+                        <!-- details icon row-->
+                        <div class="row" id="detailsIconRow">
+                            <div class="col-sm-3" id="iconCol">
+                                <img src="./images/ic_male_user.png">
+                                <span id="editPix" class="glyphicon glyphicon-camera"></span>
+                            </div>
+                            <div class="col-sm-3 text-center" id="editBtCol">
+                            </div>
+                        </div>
+	                    <div class="row" id="detailsDataRow">
+                            <ul id="newDetails">
+                                <li>
+                                    <label for="newName">Name: </label>
+                                    <input class="dataInput" type="text" name="newName" id="newName" value=""   />
+                                </li>
+                                <li>
+                                    <label for="newType">Type: </label>
+                                    <input class="dataInput" type="text" name="newType" id="newType" value=""   />
+                                </li>
+                                <li>
+                                    <label for="newComplexity">Complexity: </label>
+                                    <input class="dataInput" type="text" name="newComplexity" id="newComplexity" value=""   />
+                                </li>
+                                <li>
+                                    <label for="newLayer">Layer: </label>
+                                    <input class="dataInput" type="text" name="newLayer" id="newLayer" value=""   />
+                                </li>
+                                <li>
+                                    <label for="newLanguage">Language: </label>
+                                    <input class="dataInput" type="text" name="newLanguage" id="newLanguage" value=""   />
+                                </li>
+                                <li>
+                                    <label for="newContext">Context: </label>
+                                    <input class="dataInput" type="text" name="newContext" id="newContext" value=""   />
+                                </li>
+                                <li>
+                                    <label for="newCount">Count: </label>
+                                    <input class="dataInput" type="text" name="newCount" id="newCount" value=""   />
+                                </li>
+                                <li>
+                                    <label for="newRate">Rate: </label>
+                                    <input class="dataInput" type="text" name="newRate" id="newRate" value=""   />
+                                </li>
+                                <li>
+                                    <label for="newVersion">Version: </label>
+                                    <input class="dataInput" type="text" name="newVersion" id="newVersion" value=""   />
+                                </li>
+                                <li>
+                                    <label for="inputDescription">Description: </label> 
+                                    <textarea name="inputDescription" id="inputDescription" placeholder="short notes goes here . . ."></textarea>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>	
+            </div>
+            <div class="modal-footer">
+        	    <!-- button row -->
+                <div class="row text-center" id="newBtrow">
+                    <input type="button" id="saveBt" name="saveBt" value="SAVE" />
+                    <input type="button" id="closeBt" data-dismiss="modal" name="closeBt" value="CLOSE" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+	$("#inputModal").modal({backdrop:"static"});
+</script>

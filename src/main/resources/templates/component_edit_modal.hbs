@@ -1,0 +1,128 @@
+<!-- Modal -->
+<div id="inputModal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+		<span id="detailsText">GUESSTIMATOR</span>
+      </div>
+      <div class="modal-body">
+
+	    <div class="row" id="detailsRow">
+            <input id="mode" name="mode" type="hidden" />
+            <input id="newId" name="viewId" type="hidden" />
+            <p id="logNewEdit" style="color:red;text-align:center;"></p>
+		    <!-- details body -->
+            <div class="row" id="detailsBody">
+
+                <!-- details icon row-->
+                <div class="row" id="detailsIconRow">
+
+                    <div class="col-sm-3" id="iconCol">
+                        <img src="/./images/ic_male_user.png">
+                        <span id="editPix" class="glyphicon glyphicon-camera"></span>
+                    </div>
+
+                    <div class="col-sm-9" id="editBtCol">
+                         
+                        <div class="alert fade in" id="alertBoxModal" hidden>
+                            <span class="text-center">
+                                <strong id="logModal">OPERATION SUCCESSFUL</strong>
+                            </span>
+                        </div>
+    
+                        <div class="progress waitLogo" style="width:25%;height:20px;margin:auto; margin-top: 20px; margin-bottom: 20px;" hidden>
+                            <div class="progress-bar progress-bar-striped active" role="progressbar"  aria-valuenow="100" aria-valuemin="100" 
+                                    aria-valuemax="100" style="width:100%; background-color:#104774;">
+                                processing . . .
+                            </div>
+                        </div>    
+                    </div>
+                                                      
+                </div>
+	            <div class="row" id="detailsDataRow">
+                    <ul id="newDetails">
+                        <li>
+                            <label for="newName">Name: </label>
+                            <input class="dataInput" type="text" name="newName" id="newName" value=""   />
+                        </li>
+                        <li>
+                            <label for="newType">Type: </label>
+                            <input class="dataInput" type="text" name="newType" id="newType" value=""   />
+                        </li>
+                        <li>
+                            <label for="newComplexity">Complexity: </label>
+                            <input class="dataInput" type="text" name="newComplexity" id="newComplexity" value=""   />
+                        </li>
+                        <li>
+                            <label for="newLayer">Layer: </label>
+                            <input class="dataInput" type="text" name="newLayer" id="newLayer" value=""   />
+                        </li>
+                        <li>
+                            <label for="newLanguage">Language: </label>
+                            <input class="dataInput" type="text" name="newLanguage" id="newLanguage" value=""   />
+                        </li>
+                        <li>
+                            <label for="newContext">Context: </label>
+                            <input class="dataInput" type="text" name="newContext" id="newContext" value=""   />
+                        </li>
+                        <li>
+                            <label for="newCount">Count: </label>
+                            <input class="dataInput" type="text" name="newCount" id="newCount" value=""   />
+                        </li>
+                        <li>
+                            <label for="newRate">Rate: </label>
+                            <input class="dataInput" type="text" name="newRate" id="newRate" value=""   />
+                        </li>
+                        <li>
+                            <label for="newVersion">Version: </label>
+                            <input class="dataInput" type="text" name="newVersion" id="newVersion" value=""   />
+                        </li>
+                        <li>
+                            <label for="inputDescription">Description: </label> 
+                            <textarea name="inputDescription" id="inputDescription" placeholder="short notes goes here . . ."></textarea>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>	
+    </div>
+    <div class="modal-footer">
+        	<!-- button row -->
+			<div class="row text-center" id="newBtrow">
+				<input type="button" id="saveBt" name="saveBt" value="SAVE" />
+				<input type="button" id="closeBt" data-dismiss="modal" name="closeBt" value="CLOSE" />
+			</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script type="text/javascript">
+    
+    $(".waitLogo, #alertBox").hide();
+   
+$(document).ajaxStart( function() {
+    $("#alertBoxModal").hide();
+    $(".waitLogo").show();
+});
+
+$(document).ajaxComplete( function () {
+    setTimeout (
+      function() {
+        $(".waitLogo").hide();
+        $("#alertBoxModal").show();
+
+     }, 500);
+});
+
+
+$("#closeBt").click(function(event) {
+   event.preventDefault();
+   $("#inputModal").modal("hide");
+   window.location.reload();
+});
+    
+</script>
